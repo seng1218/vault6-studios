@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --v6-accent: #2563eb; /* Blue */
+  --v6-glow: rgba(37, 99, 235, 0.1);
+  --v6-grid: rgba(15, 23, 42, 0.05);
+}
+
+.dark {
+  --background: #050505;
+  --foreground: #f8fafc;
+  --v6-accent: #3b82f6; /* Lighter Blue */
+  --v6-glow: rgba(59, 130, 246, 0.15);
+  --v6-grid: rgba(255, 255, 255, 0.03);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-v6-accent: var(--v6-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+@layer utilities {
+  .text-outline {
+    -webkit-text-stroke: 1.5px currentColor;
+    color: transparent;
+  }
+  .blue-glitch {
+    filter: sepia(1) hue-rotate(190deg) saturate(12) brightness(1.5) blur(4px);
+  }
+  .dark .blue-glitch {
+    filter: sepia(1) hue-rotate(190deg) saturate(12) brightness(2) blur(6px);
+  }
+  .v6-accent-text {
+    color: var(--v6-accent);
+  }
+  .v6-bg {
+    background-color: var(--background);
+  }
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (max-width: 768px) {
+  .text-outline {
+    -webkit-text-stroke: 1px currentColor;
+  }
 }

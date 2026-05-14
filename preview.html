@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault 6 Studios | Offline Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #f8fafc;
+            --foreground: #0f172a;
+            --v6-accent: #2563eb;
+            --v6-glow: rgba(37, 99, 235, 0.1);
+        }
+
+        html.dark {
+            --background: #050505;
+            --foreground: #f8fafc;
+            --v6-accent: #3b82f6;
+            --v6-glow: rgba(59, 130, 246, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            transition: background-color 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .text-outline {
+            -webkit-text-stroke: 1.5px currentColor;
+            color: transparent;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .animate-marquee {
+            display: flex;
+            animation: marquee 30s linear infinite;
+        }
+
+        .vault-bg-text {
+            font-size: 25vw;
+            line-height: 0.7;
+            font-weight: 900;
+            text-transform: uppercase;
+            opacity: 0.05;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #menu-overlay {
+            clip-path: inset(0 0 100% 0);
+            transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+            opacity: 0;
+        }
+
+        #menu-overlay.open {
+            clip-path: inset(0 0 0% 0);
+            opacity: 1;
+        }
+
+        .scanner-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--v6-accent);
+            opacity: 0.3;
+            box-shadow: 0 0 20px var(--v6-accent);
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* Simplified placeholder for image sequence */
+        .figurine-placeholder {
+            width: 80%;
+            max-width: 600px;
+            aspect-ratio: 1/1;
+            background: radial-gradient(circle, var(--v6-glow) 0%, transparent 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .figurine-placeholder::after {
+            content: "[ 3D ARTIFACT PREVIEW ]";
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 0.5em;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body class="dark">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full z-[100]">
+        <div class="w-full bg-black/10 backdrop-blur-md border-b border-white/5 py-2 overflow-hidden whitespace-nowrap">
+            <div class="animate-marquee">
+                <div class="flex items-center gap-12 px-12 text-[8px] font-black tracking-[0.4em]">
+                    <span style="color: var(--v6-accent)">SYNDICATE</span> <span class="opacity-40">847 MEMBERS ACTIVE</span> <span class="opacity-20">·</span>
+                    <span style="color: var(--v6-accent)">NEXT DROP</span> <span class="opacity-40">WEEKLY</span> <span class="opacity-20">·</span>
+                    <span style="color: var(--v6-accent)">VAULT STATUS</span> <span class="opacity-40">OPERATIONAL</span> <span class="opacity-20">·</span>
+                </div>
+                <!-- Repeat for marquee effect -->
+                <div class="flex items-center gap-12 px-12 text-[8px] font-black tracking-[0.4em]">
+                    <span style="color: var(--v6-accent)">SYNDICATE</span> <span class="opacity-40">847 MEMBERS ACTIVE</span> <span class="opacity-20">·</span>
+                    <span style="color: var(--v6-accent)">NEXT DROP</span> <span class="opacity-40">WEEKLY</span> <span class="opacity-20">·</span>
+                    <span style="color: var(--v6-accent)">VAULT STATUS</span> <span class="opacity-40">OPERATIONAL</span> <span class="opacity-20">·</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center px-6 py-6 md:px-12">
+            <div class="text-2xl font-black tracking-tighter">
+                VAULT 6 STUDIOS<span style="color: var(--v6-accent)">.</span>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <button onclick="toggleMenu()" class="flex items-center gap-3 px-6 py-3 border border-current/10 rounded-xl hover:bg-current/5 transition-all">
+                    <span class="text-[10px] font-black tracking-[0.3em] uppercase" id="menu-btn-text">MENU</span>
+                </button>
+                
+                <button onclick="toggleTheme()" class="p-3 rounded-xl hover:bg-current/5">
+                    🌙
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Stage -->
+    <main class="relative min-h-screen flex flex-col items-center justify-center pt-20">
+        <div class="fixed inset-0 -z-10 flex flex-col items-center justify-center overflow-hidden">
+            <div class="vault-bg-text">VAULT</div>
+            <div class="vault-bg-text text-outline">ARCHIVE</div>
+        </div>
+
+        <section class="flex flex-col items-center text-center px-6">
+            <span class="text-[10px] font-black uppercase tracking-[1em] mb-8 block" style="color: var(--v6-accent)">Established 2023</span>
+            <h1 class="text-[12vw] md:text-[8vw] font-black leading-[0.8] tracking-tighter uppercase italic">
+                Vault 6 <br />
+                <span class="text-outline">Studios</span><span style="color: var(--v6-accent)">.</span>
+            </h1>
+            
+            <div class="figurine-placeholder my-12"></div>
+
+            <p class="mt-8 opacity-60 text-sm md:text-base font-medium max-w-sm leading-relaxed">
+                Authenticated Japanese collectible figures — curated for serious collectors.
+            </p>
+
+            <button class="mt-12 bg-current text-background px-12 py-6 font-black text-xs uppercase tracking-[0.4em] hover:opacity-90 transition-all">
+                Enter Vault
+            </button>
+        </section>
+    </main>
+
+    <!-- Menu Overlay -->
+    <div id="menu-overlay" class="fixed inset-0 bg-background/95 backdrop-blur-2xl z-[105] flex flex-col items-center justify-center p-6 pointer-events-none">
+        <div class="scanner-line"></div>
+        <nav class="space-y-8 md:space-y-12 text-center pointer-events-auto">
+            <div class="group">
+                <a href="#" class="block text-4xl md:text-7xl font-black italic uppercase tracking-tighter hover:translate-x-4 transition-transform">01 COLLECTION</a>
+            </div>
+            <div class="group">
+                <a href="#" class="block text-4xl md:text-7xl font-black italic uppercase tracking-tighter hover:translate-x-4 transition-transform">02 TRACKING</a>
+            </div>
+            <div class="group">
+                <a href="#" class="block text-4xl md:text-7xl font-black italic uppercase tracking-tighter hover:translate-x-4 transition-transform">03 JOIN SYNDICATE</a>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            document.body.classList.toggle('dark');
+        }
+
+        function toggleMenu() {
+            const overlay = document.getElementById('menu-overlay');
+            const btnText = document.getElementById('menu-btn-text');
+            const isOpen = overlay.classList.toggle('open');
+            
+            overlay.style.pointerEvents = isOpen ? 'auto' : 'none';
+            btnText.innerText = isOpen ? 'CLOSE' : 'MENU';
+        }
+    </script>
+</body>
+</html>

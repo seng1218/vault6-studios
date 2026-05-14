@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Artifact {
+  id           String   @id @default(uuid())
+  deploymentId String   @unique
+  name         String
+  series       String
+  category     String
+  price        String
+  status       String
+  scale        String
+  material     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSetting {
+  key   String @id
+  value String
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerEmail   String
+  address         String
+  city            String
+  state           String
+  zip             String
+  country         String      @default("MALAYSIA")
+  subtotal        Float
+  shipping        Float
+  total           Float
+  status          String      @default("PENDING") // PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id])
+  artifactId   String
+  artifactName String
+  price        Float
+  quantity     Int
+}
