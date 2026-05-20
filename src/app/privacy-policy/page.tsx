@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
                 <p className="text-foreground font-bold text-xs uppercase tracking-widest mb-2">Transaction Data</p>
                 <ul className="list-disc list-inside space-y-1 text-foreground/60">
                   <li>Order history, items purchased, quantities, and amounts paid</li>
-                  <li>Payment method type (e.g. credit card, FPX, e-wallet) — we do not store full card numbers; payment is processed by Curlec Sdn. Bhd. (Razorpay Curlec).</li>
+                  <li>Payment method type (e.g. credit card, FPX, e-wallet) — we do not store full card numbers; payment is processed by Fiuu Sdn. Bhd. (Fiuu).</li>
                   <li>Shipping tracking numbers and dispatch records</li>
                   <li>Voucher codes used and discounts applied</li>
                 </ul>
@@ -120,7 +120,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc list-inside space-y-3">
               <li>
-                <strong className="text-foreground">Curlec Sdn. Bhd. / Razorpay Curlec (Payment Processor):</strong> Your payment details are submitted directly to Razorpay Curlec's secure gateway. We receive only transaction confirmation and payment method type. Razorpay Curlec's privacy policy governs their handling of payment data.
+                <strong className="text-foreground">Fiuu Sdn. Bhd. (Payment Processor):</strong>{" "}Your payment details are submitted directly to Fiuu&apos;s secure gateway. We receive only transaction confirmation and payment method type. Fiuu&apos;s privacy policy governs their handling of payment data.
               </li>
               <li>
                 <strong className="text-foreground">Courier Partners</strong> (J&T Express, PosLaju, NinjaVan, DHL eCommerce, etc.): Your name, delivery address, and phone number are shared with the assigned courier solely for the purpose of parcel delivery.

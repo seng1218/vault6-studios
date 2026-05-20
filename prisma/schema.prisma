@@ -34,6 +34,7 @@ model Order {
   orderNumber     String      @unique
   customerName    String
   customerEmail   String
+  phone           String      @default("")
   address         String
   city            String
   state           String
@@ -42,7 +43,8 @@ model Order {
   subtotal        Float
   shipping        Float
   total           Float
-  status          String      @default("PENDING") // PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
+  status          String      @default("PENDING") // PENDING, PAID, FAILED, SHIPPED, COMPLETED, CANCELLED
+  transactionId   String?
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

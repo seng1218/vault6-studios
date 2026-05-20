@@ -104,7 +104,7 @@ export default function TermsPage() {
             </p>
             <ol className="list-decimal list-inside space-y-2">
               <li>You submit your order via our checkout and</li>
-              <li>Payment is successfully processed and confirmed by Razorpay Curlec, and</li>
+              <li>Payment is successfully processed and confirmed by Fiuu, and</li>
               <li>We dispatch a written order confirmation via WhatsApp or email.</li>
             </ol>
             <p>
@@ -120,10 +120,10 @@ export default function TermsPage() {
               All prices are stated in <strong className="text-foreground">Malaysian Ringgit (MYR)</strong>, inclusive of applicable taxes. Prices are subject to change without notice prior to order confirmation.
             </p>
             <p>
-              Payments are processed by <strong className="text-foreground">Curlec Sdn. Bhd. (Razorpay Curlec)</strong> through their secure payment gateway. Accepted payment methods include FPX online banking, major credit and debit cards, and supported e-wallets. By proceeding with payment, you also agree to Razorpay Curlec's Terms of Service and Privacy Policy.
+              Payments are processed by <strong className="text-foreground">Fiuu Sdn. Bhd. (Fiuu)</strong> through their secure payment gateway. Accepted payment methods include FPX online banking, major credit and debit cards, and supported e-wallets. By proceeding with payment, you also agree to Fiuu&apos;s Terms of Service and Privacy Policy.
             </p>
             <p>
-              We do not store, process, or have access to full payment card details. All payment data is handled exclusively by Razorpay Curlec in compliance with PCI DSS standards.
+              We do not store, process, or have access to full payment card details. All payment data is handled exclusively by Fiuu in compliance with PCI DSS standards.
             </p>
           </Section>
 

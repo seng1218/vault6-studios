@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { CustomCursor } from "@/components/custom-cursor";
 import { SettingsProvider } from "@/components/settings-provider";
 import { CartProvider } from "@/components/cart-provider";
+import { SmoothScrollProvider } from "@/components/smooth-scroll-provider";
 import { getSettings } from "@/app/actions/settings-actions";
 
 const geistSans = Geist({
@@ -52,7 +53,9 @@ export default async function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
+              <SmoothScrollProvider>
+                {children}
+              </SmoothScrollProvider>
             </ThemeProvider>
             <CustomCursor />
           </CartProvider>

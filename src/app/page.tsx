@@ -1,20 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ImageSequenceViewer } from "@/components/image-sequence-viewer";
-import { motion, useScroll, useTransform, useSpring, motionValue } from "framer-motion";
-import { ShieldCheck, Activity, Cpu, ArrowRight, Search, ShoppingBag } from "lucide-react";
+import { motion, useScroll, useTransform, useSpring, motionValue, useMotionValue, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ShieldCheck, Activity, Cpu, ArrowRight, Search, ShoppingBag, ChevronDown, Loader2 } from "lucide-react";
 import type { FrameAdjustment } from "@/components/image-sequence-viewer";
 import { useSettings } from "@/components/settings-provider";
 import { useCart } from "@/components/cart-provider";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Home() {
   const { addToCart } = useCart();
   const router = useRouter();
   const [trackId, setTrackId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isHoveringVault, setIsHoveringVault] = useState(false);
+
   const figurineFrames = Array.from({ length: 25 }, (_, i) => `/frames/${(i + 1).toString().padStart(2, '0')}.png`);
   
   const handleHomeTrack = (e: React.FormEvent) => {
@@ -25,40 +32,10 @@ export default function Home() {
   };
   const { settings } = useSettings();
 
-  // USER: Adjust these per frame if zoom is inconsistent
-  const frameAdjustments: FrameAdjustment[] = [
-    { scale: 1.0 }, // 01
-    { scale: 1.0 }, // 02
-    { scale: 1.0 }, // 03
-    { scale: 1.0 }, // 04
-    { scale: 1.0 }, // 05
-    { scale: 1.0 }, // 06
-    { scale: 1.0 }, // 07
-    { scale: 1.0 }, // 08
-    { scale: 1.0 }, // 09
-    { scale: 1.0 }, // 10
-    { scale: 1.0 }, // 11
-    { scale: 1.0 }, // 12
-    { scale: 1.0 }, // 13
-    { scale: 1.0 }, // 14
-    { scale: 1.0 }, // 15
-    { scale: 1.0 }, // 16
-    { scale: 1.0 }, // 17
-    { scale: 1.0 }, // 18
-    { scale: 1.0 }, // 19
-    { scale: 1.0 }, // 20
-    { scale: 1.0 }, // 21
-    { scale: 1.0 }, // 22
-    { scale: 1.0 }, // 23
-    { scale: 1.0 }, // 24
-    { scale: 1.0 }, // 25
-  ];
+  const frameAdjustments: FrameAdjustment[] = Array(25).fill({ scale: 1.0 });
 
   const { scrollYProgress } = useScroll();
-  const [frameIndex, setFrameIndex] = useState(0);
-  
   const springConfig = { damping: 40, stiffness: 200 };
-  const smoothScroll = useSpring(scrollYProgress, { damping: 80, stiffness: 50 });
 
   const time = motionValue(0);
   useEffect(() => {
@@ -71,39 +48,150 @@ export default function Home() {
     return () => cancelAnimationFrame(raf);
   }, [time]);
 
-  const idleRotation = useTransform(time, [0, 20000], [0, 1], { clamp: false });
-  const isScrolling = useTransform(smoothScroll, [0, 0.01], [0, 1]);
-  
-  const combinedProgress = useTransform(
-    [smoothScroll, idleRotation, isScrolling],
-    ([scroll, idle, scrolling]) => {
-      return (scrolling as number) > 0.5 ? (scroll as number) : (idle as number) % 1;
-    }
-  );
-
-  const currentIndex = useTransform(combinedProgress, (v) => 
-    Math.min(Math.floor((v as number) * figurineFrames.length), figurineFrames.length - 1)
-  );
+  // Suggestion A: Seamless Rotation Handoff
+  const idleRotation = useMotionValue(0);
+  const isScrollingRaw = useMotionValue(0);
+  const blendValue = useSpring(0, { damping: 30, stiffness: 100 });
 
   useEffect(() => {
-    return currentIndex.on("change", (v) => setFrameIndex(v));
-  }, [currentIndex]);
+    let raf: number;
+    const update = (t: number) => {
+      // Manual calculation for idleRotation to avoid useTransform scope issues
+      idleRotation.set((t / 7000) % 1);
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(raf);
+  }, [idleRotation]);
+
+  useEffect(() => {
+    const unsub = scrollYProgress.on("change", (v) => {
+      // Manual calculation for scrolling state
+      const scrolling = v > 0 ? Math.min(v / 0.01, 1) : 0;
+      isScrollingRaw.set(scrolling);
+      blendValue.set(scrolling > 0.5 ? 1 : 0);
+    });
+    return unsub;
+  }, [scrollYProgress, isScrollingRaw, blendValue]);
+
+  const combinedProgress = useMotionValue(0);
+  useEffect(() => {
+    const updateCombined = () => {
+      const scroll = scrollYProgress.get();
+      const idle = idleRotation.get();
+      const blend = blendValue.get();
+      combinedProgress.set(idle * (1 - blend) + scroll * blend);
+    };
+
+    const unsubScroll = scrollYProgress.on("change", updateCombined);
+    const unsubIdle = idleRotation.on("change", updateCombined);
+    const unsubBlend = blendValue.on("change", updateCombined);
+
+    return () => {
+      unsubScroll();
+      unsubIdle();
+      unsubBlend();
+    };
+  }, [scrollYProgress, idleRotation, blendValue, combinedProgress]);
+
+  const currentIndex = useMotionValue(0);
+  useEffect(() => {
+    const unsub = combinedProgress.on("change", (v) => {
+      currentIndex.set(Math.min(Math.floor(v * figurineFrames.length), figurineFrames.length - 1));
+    });
+    return unsub;
+  }, [combinedProgress, figurineFrames.length, currentIndex]);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Increment loading progress
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsLoading(false), 500); // Small delay after 100%
+          return 100;
+        }
+        // Random increments for a more "real" feel
+        const inc = Math.floor(Math.random() * 8) + 2;
+        return Math.min(prev + inc, 100);
+      });
+    }, 150);
+
+    const ctx = gsap.context(() => {
+      if (!isLoading) {
+        gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
+          gsap.fromTo(el, { opacity: 0, y: 50 }, {
+            opacity: 1, y: 0, duration: 0.9, ease: "power3.out",
+            scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" }
+          });
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-reveal-card]").forEach((el, i) => {
+          gsap.fromTo(el, { opacity: 0, y: 40, scale: 0.97 }, {
+            opacity: 1, y: 0, scale: 1, duration: 0.8, delay: i * 0.12, ease: "power3.out",
+            scrollTrigger: { trigger: el, start: "top 92%", toggleActions: "play none none none" }
+          });
+        });
+      }
+    }, [isLoading]);
+
+    return () => {
+      ctx.revert();
+      clearInterval(interval);
+    };
+  }, [isLoading]);
 
   const x = useSpring(useTransform(scrollYProgress, [0, 0.4, 0.7, 1], ["0%", "22%", "-22%", "0%"]), springConfig);
   const scale = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.1, 0.9]), springConfig);
 
   return (
     <main id="main-container" className="relative w-full bg-background overflow-x-hidden text-foreground font-sans selection:bg-v6-accent selection:text-white transition-colors duration-500">
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div 
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center p-12"
+          >
+            <div className="w-full max-w-xs space-y-4">
+              <div className="flex justify-between font-mono text-[10px] tracking-widest opacity-40 uppercase">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin" size={12} />
+                  <span>Initializing Vault</span>
+                </div>
+                <span>{loadingProgress}%</span>
+              </div>
+              <div className="h-[1px] w-full bg-foreground/5 relative overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${loadingProgress}%` }}
+                  transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                  className="absolute h-full bg-v6-accent shadow-[0_0_15px_var(--v6-glow)]" 
+                />
+              </div>
+              <div className="font-mono text-[8px] opacity-20 uppercase flex flex-col gap-1">
+                <span>&gt; Sourcing Artifacts...</span>
+                <span>&gt; Multi-Stage Verification Active...</span>
+                <span>&gt; Establishing Secure Connection...</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Header />
       
       <div className="fixed inset-0 z-0 bg-background">
-        <ImageSequenceViewer 
-          imageUrls={figurineFrames} 
-          currentIndex={frameIndex}
+        <ImageSequenceViewer
+          imageUrls={figurineFrames}
+          currentIndex={currentIndex}
           fusionUrls={figurineFrames.slice(10, 15)}
           x={x}
           scale={scale}
           frameAdjustments={frameAdjustments}
+          scrollYProgress={scrollYProgress}
+          isHovered={isHoveringVault}
         />
       </div>
 
@@ -111,31 +199,52 @@ export default function Home() {
         <div className="text-center max-w-5xl mix-blend-exclusion">
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              textShadow: [
+                "0 0 0px transparent",
+                "2px 0 10px var(--v6-glow)",
+                "-2px 0 10px rgba(255,0,0,0.1)",
+                "0 0 0px transparent"
+              ]
+            }}
+            transition={{ duration: 0.8, delay: 2.2, textShadow: { repeat: Infinity, duration: 2 } }}
             className="text-[12vw] md:text-[10vw] font-black leading-[0.8] tracking-tighter uppercase italic"
           >
             {settings.hero_title} <br />
-            <span className="text-outline border-foreground/50">{settings.hero_subtitle}</span>
+            <motion.span 
+              animate={{ opacity: [1, 0.8, 1, 0.9, 1] }}
+              transition={{ repeat: Infinity, duration: 0.1, repeatDelay: 3 }}
+              className="text-outline border-foreground/50"
+            >
+              {settings.hero_subtitle}
+            </motion.span>
             <span className="v6-accent-text">.</span>
           </motion.h1>
           <p className="mt-8 opacity-60 text-sm md:text-base font-medium max-w-sm mx-auto leading-relaxed">
             {settings.hero_description}
           </p>
-          <div className="flex flex-col items-center justify-center gap-6 mt-12 pointer-events-auto">
-            <button className="group relative bg-foreground text-background px-12 py-6 font-black text-xs uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-v6-accent hover:text-white transition-all overflow-hidden shadow-2xl">
+          <div className="flex flex-col items-center justify-center mt-12 pointer-events-auto">
+            <Link href="/collection" className="group relative bg-foreground text-background px-12 py-6 font-black text-xs uppercase tracking-[0.4em] flex items-center gap-4 hover:text-white transition-all overflow-hidden shadow-2xl">
                <div className="absolute inset-0 bg-v6-accent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
                <span className="relative z-10 font-black">Enter Vault</span>
                <ArrowRight className="relative z-10 group-hover:translate-x-2 transition-transform" size={18} />
-            </button>
-            <a href="#" className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 hover:opacity-100 hover:text-v6-accent transition-all border-b border-transparent hover:border-v6-accent pb-1">
-              Browse the Archive
-            </a>
+            </Link>
           </div>
         </div>
+
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-10 opacity-25"
+        >
+          <ChevronDown size={22} />
+        </motion.div>
       </section>
 
       <section className="relative h-screen flex items-center px-6 md:px-24 z-10">
-        <div className="max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 bg-foreground/5 backdrop-blur-xl p-12 md:p-20 rounded-[3rem] border border-foreground/10 shadow-2xl">
+        <div data-reveal className="max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 bg-foreground/5 backdrop-blur-xl p-12 md:p-20 rounded-[3rem] border border-foreground/10 shadow-2xl">
           <div>
             <span className="v6-accent-text font-black text-[10px] uppercase tracking-[0.5em] mb-4 block">Vault Standards</span>
             <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-8">OUR <br />ETHOS.</h2>
@@ -166,7 +275,7 @@ export default function Home() {
 
       <section className="relative py-32 px-6 z-20 overflow-hidden">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-foreground/[0.03] dark:bg-foreground/[0.01] border border-foreground/10 rounded-[3rem] p-12 md:p-20 shadow-2xl relative overflow-hidden">
+          <div data-reveal className="bg-foreground/[0.03] dark:bg-foreground/[0.01] border border-foreground/10 rounded-[3rem] p-12 md:p-20 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 w-80 h-80 bg-v6-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
              <div className="relative z-10 text-center">
                 <h2 className="text-4xl font-black italic tracking-tighter mb-4">TRACK YOUR PACKAGE</h2>
@@ -193,7 +302,7 @@ export default function Home() {
 
       <section className="relative min-h-screen py-32 px-6 md:px-24 z-20">
         <div className="bg-foreground/[0.02] backdrop-blur-3xl p-12 md:p-24 rounded-[4rem] shadow-2xl border border-foreground/5">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-24">
+          <div data-reveal className="flex flex-col md:flex-row justify-between items-end mb-24">
             <h2 className="text-5xl md:text-9xl font-black uppercase tracking-tighter italic">THE VAULT.</h2>
             <p className="v6-accent-text max-w-xs mt-4 md:mt-0 font-black tracking-widest uppercase text-[10px]">
               LIMITED STUDIO QUANTITIES
@@ -206,8 +315,11 @@ export default function Home() {
               { name: "Detective Samurai", price: "$38", type: "Head Sculpt" },
               { name: "Jeet Kune Do Master", price: "Sold Out", type: "Full Custom" },
             ].map((item, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
+                data-reveal-card
+                onMouseEnter={() => setIsHoveringVault(true)}
+                onMouseLeave={() => setIsHoveringVault(false)}
                 whileHover={{ y: -15, scale: 1.02 }}
                 className="group border border-foreground/5 p-12 flex flex-col aspect-square justify-between hover:bg-foreground/5 transition-all duration-500 rounded-[2.5rem] bg-background/40"
               >
@@ -244,7 +356,7 @@ export default function Home() {
       </section>
 
       <section className="relative h-screen flex flex-col items-center justify-center z-10 px-6">
-        <div className="text-center bg-v6-accent/5 backdrop-blur-3xl p-16 md:p-32 rounded-[5rem] border border-v6-accent/20 shadow-2xl relative overflow-hidden">
+        <div data-reveal className="text-center bg-v6-accent/5 backdrop-blur-3xl p-16 md:p-32 rounded-[5rem] border border-v6-accent/20 shadow-2xl relative overflow-hidden">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-v6-accent/10 rounded-full blur-[150px]"></div>
           <div className="relative z-10">
             <span className="inline-block text-[10px] bg-v6-accent text-white px-4 py-1.5 rounded-full font-black uppercase tracking-widest mb-8">Secured Connection</span>

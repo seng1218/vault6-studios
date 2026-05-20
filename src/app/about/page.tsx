@@ -23,7 +23,7 @@ export default function AboutPage() {
               <strong className="text-foreground">Vault 6 Studios</strong> is a Malaysia-based private seller of Japanese collectible figures and related merchandise, operating under the brand <strong className="text-foreground">Crafted Legacies</strong>. We were established in 2023 with a focus on making premium anime and pop-culture collectibles accessible to Malaysian collectors through a transparent, trust-first approach.
             </p>
             <p>
-              We operate exclusively within Malaysia and conduct all transactions through our online storefront at <strong className="text-foreground">vault6studios.com</strong>. Payments are processed securely via <strong className="text-foreground">Razorpay Curlec</strong> (Curlec Sdn. Bhd.), a Bank Negara Malaysia-licensed payment service provider.
+              We operate exclusively within Malaysia and conduct all transactions through our online storefront at <strong className="text-foreground">vault6studios.com</strong>. Payments are processed securely via <strong className="text-foreground">Fiuu</strong> (Fiuu Sdn. Bhd., formerly MOLPay), a Bank Negara Malaysia-licensed Payment System Operator.
             </p>
             <p className="text-foreground/60 text-xs border border-foreground/10 p-4 rounded-lg">
               <strong className="text-foreground">Business Type:</strong> Private individual seller &nbsp;·&nbsp; <strong className="text-foreground">Country of Operation:</strong> Malaysia &nbsp;·&nbsp; <strong className="text-foreground">Industry:</strong> Collectibles & Merchandise Retail &nbsp;·&nbsp; <strong className="text-foreground">Established:</strong> 2023
@@ -113,7 +113,7 @@ export default function AboutPage() {
               </div>
               <div className="flex gap-4">
                 <span className="text-foreground/60 font-black text-[10px] uppercase tracking-widest w-32 shrink-0">Payment</span>
-                <span className="text-foreground/80">Processed by Razorpay Curlec (Curlec Sdn. Bhd.)</span>
+                <span className="text-foreground/80">Processed by Fiuu (Fiuu Sdn. Bhd.) · BNM Licensed PSO</span>
               </div>
             </div>
             <p className="text-foreground/60 text-xs mt-4">
