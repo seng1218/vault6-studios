@@ -20,6 +20,11 @@ model Artifact {
   status       String
   scale        String
   material     String
+  highlights   String   @default("")
+  imageUrls    String   @default("")
+  condition    String   @default("MISB")
+  manufacturer String   @default("Unknown")
+  inventory    Int      @default(1)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

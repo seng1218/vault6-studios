@@ -95,7 +95,7 @@ const FrameImage = React.memo(({
   const opacity = useTransform(currentIndex, (v) => {
     const distance = Math.abs(v - index);
     if (mode === "primary") {
-       return distance < 1 ? 1 - distance : 0;
+       return distance < 1 ? Math.sqrt(1 - distance) : 0;
     }
     // Ghost frames have a wider influence
     return distance < 1.5 ? (1.5 - distance) * 0.3 : 0;
@@ -160,6 +160,25 @@ const FrameImage = React.memo(({
 });
 FrameImage.displayName = "FrameImage";
 
+interface MotionValueTextProps {
+  value: MotionValue<number>;
+  format: (v: number) => string;
+}
+
+const MotionValueText = React.memo(({ value, format }: MotionValueTextProps) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const unsub = value.on("change", (v) => {
+      if (ref.current) {
+        ref.current.textContent = format(v);
+      }
+    });
+    return unsub;
+  }, [value, format]);
+  return <span ref={ref}>{format(value.get())}</span>;
+});
+MotionValueText.displayName = "MotionValueText";
+
 export function ImageSequenceViewer({
   imageUrls,
   currentIndex,
@@ -172,7 +191,6 @@ export function ImageSequenceViewer({
   isHovered = false
 }: ImageSequenceProps) {
   const [activeFrame, setActiveFrame] = useState(0);
-  const [hudVelocity, setHudVelocity] = useState(0);
 
   const time = useMotionValue(0);
   useEffect(() => {
@@ -186,6 +204,7 @@ export function ImageSequenceViewer({
   }, [time]);
 
   const velocity = useVelocity(currentIndex);
+  const rotVelocity = useTransform(velocity, (v) => v / 10);
   const blurValue = useTransform(velocity, [-80, 0, 80], [10, 0, 10]);
   const smoothBlur = useSpring(blurValue, { damping: 25, stiffness: 150 });
 
@@ -193,14 +212,10 @@ export function ImageSequenceViewer({
     const unsub = currentIndex.on("change", (v) => {
       setActiveFrame(Math.floor(v));
     });
-    const unsubVel = velocity.on("change", (v) => setHudVelocity(v));
-    return () => {
-      unsub();
-      unsubVel();
-    };
-  }, [currentIndex, velocity]);
+    return unsub;
+  }, [currentIndex]);
 
-  const isScrollActive = useTransform(velocity, (v) => Math.abs(v) > 0.1 ? 1 : 0);
+  const isScrollActive = useTransform(velocity, (v): number => Math.abs(v) > 0.1 ? 1 : 0);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -271,8 +286,8 @@ export function ImageSequenceViewer({
             <div>Artifact_Status: Multi-Stage Verified</div>
           </div>
           <div className="text-right">
-            <div>F_INDEX: {currentIndex.get().toFixed(2)}</div>
-            <div>ROT_V: {(hudVelocity / 10).toFixed(2)} deg/s</div>
+            <div>F_INDEX: <MotionValueText value={currentIndex} format={(v) => v.toFixed(2)} /></div>
+            <div>ROT_V: <MotionValueText value={rotVelocity} format={(v) => v.toFixed(2)} /> deg/s</div>
           </div>
         </div>
         <div className="flex justify-between items-end">

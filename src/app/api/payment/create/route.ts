@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 const FIUU_MERCHANT_ID = process.env.FIUU_MERCHANT_ID ?? "";
