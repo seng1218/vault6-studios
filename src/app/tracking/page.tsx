@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
 import { Search, ShieldAlert, Cpu, Globe, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { playHoverSound, playClickSound, playSuccessSound } from "@/lib/sound-effects";
 
 function TrackingContent() {
   const searchParams = useSearchParams();
@@ -28,11 +29,13 @@ function TrackingContent() {
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deploymentId) return;
+    playClickSound();
     setIsSearching(true);
     setHasResult(false);
     setTimeout(() => {
       setIsSearching(false);
       setHasResult(true);
+      playSuccessSound();
     }, 2000);
   };
 
@@ -72,6 +75,7 @@ function TrackingContent() {
           <button 
             type="submit"
             disabled={isSearching}
+            onMouseEnter={playHoverSound}
             className="w-full bg-v6-accent text-white rounded-3xl py-8 font-black text-xs uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-v6-accent/30 disabled:opacity-50 disabled:scale-100"
           >
             {isSearching ? "SEARCHING..." : "TRACK MY PACKAGE"}
@@ -96,6 +100,8 @@ function TrackingContent() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={playClickSound}
+                  onMouseEnter={playHoverSound}
                   className="flex items-center justify-between p-6 bg-foreground/5 border border-foreground/10 rounded-2xl group hover:bg-v6-accent hover:border-v6-accent transition-all"
                 >
                   <div className="flex items-center gap-4">

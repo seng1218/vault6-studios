@@ -45,17 +45,6 @@ export function Footer() {
             <p className="opacity-40 text-xs font-medium max-w-sm leading-relaxed uppercase tracking-wider">
               {settings.hero_description}
             </p>
-            <div className="flex gap-6 opacity-30">
-               {/* Syndicate Meta Data moved here */}
-               <div className="flex flex-col">
-                  <span className="text-[7px] font-black tracking-widest uppercase mb-1">Syndicate Status</span>
-                  <span className="text-[10px] font-black v6-accent-text uppercase">{settings.marquee_syndicate_status}</span>
-               </div>
-               <div className="flex flex-col">
-                  <span className="text-[7px] font-black tracking-widest uppercase mb-1">Active Nodes</span>
-                  <span className="text-[10px] font-black uppercase">{settings.marquee_member_count}</span>
-               </div>
-            </div>
           </div>
 
           {/* Links Columns */}

@@ -15,6 +15,19 @@ export async function fetchArtifacts() {
   }
 }
 
+export async function fetchArtifactById(id: string) {
+  try {
+    const artifact = await prisma.artifact.findUnique({
+      where: { id },
+    });
+    if (!artifact) return { success: false, error: "Artifact not found." };
+    return { success: true, data: artifact };
+  } catch (error) {
+    console.error("Database Error:", error);
+    return { success: false, error: "Failed to fetch artifact." };
+  }
+}
+
 export async function createArtifact(data: any) {
   try {
     const artifact = await prisma.artifact.create({
@@ -27,6 +40,11 @@ export async function createArtifact(data: any) {
         status: data.status,
         scale: data.scale,
         material: data.material,
+        highlights: data.highlights || "",
+        imageUrls: data.imageUrls || "",
+        condition: data.condition || "MISB",
+        manufacturer: data.manufacturer || "Unknown",
+        inventory: data.inventory || 1,
       },
     });
     revalidatePath("/collection");
@@ -51,6 +69,11 @@ export async function updateArtifact(id: string, data: any) {
         status: data.status,
         scale: data.scale,
         material: data.material,
+        highlights: data.highlights || "",
+        imageUrls: data.imageUrls || "",
+        condition: data.condition || "MISB",
+        manufacturer: data.manufacturer || "Unknown",
+        inventory: data.inventory || 1,
       },
     });
     revalidatePath("/collection");
@@ -100,6 +123,11 @@ export async function seedInitialData() {
           status: item.status,
           scale: item.scale,
           material: item.material,
+          highlights: "Hyper-detailed hand painted facial and hair textures\nUniversally compatible with standard 1/6 action body frames\nPre-fitted modular neck connector socket",
+          imageUrls: "",
+          condition: "MISB",
+          manufacturer: "Vault 6 Studios",
+          inventory: 10,
         },
       });
     }

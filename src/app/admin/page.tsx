@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Mock Members State
   const [members, setMembers] = useState([
@@ -41,7 +42,12 @@ export default function AdminPage() {
     price: "$",
     status: "AVAILABLE",
     scale: "1/6",
-    material: "RESIN"
+    material: "RESIN",
+    highlights: "",
+    imageUrls: "",
+    condition: "MISB",
+    manufacturer: "Unknown",
+    inventory: 1
   });
 
   const checkAuth = async () => {
@@ -105,7 +111,12 @@ export default function AdminPage() {
       price: item.price,
       status: item.status,
       scale: item.scale,
-      material: item.material
+      material: item.material,
+      highlights: item.highlights || "",
+      imageUrls: item.imageUrls || "",
+      condition: item.condition || "MISB",
+      manufacturer: item.manufacturer || "Unknown",
+      inventory: item.inventory || 1
     });
     setIsAdding(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -122,8 +133,44 @@ export default function AdminPage() {
       price: "$",
       status: "AVAILABLE",
       scale: "1/6",
-      material: "RESIN"
+      material: "RESIN",
+      highlights: "",
+      imageUrls: "",
+      condition: "MISB",
+      manufacturer: "Unknown",
+      inventory: 1
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      Array.from(e.target.files).forEach(file => {
+        formData.append('files', file);
+      });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (res.ok && data.urls) {
+        const currentUrls = artifactForm.imageUrls ? artifactForm.imageUrls.split('\n').filter(Boolean) : [];
+        const newUrls = [...currentUrls, ...data.urls];
+        setArtifactForm({ ...artifactForm, imageUrls: newUrls.join('\n') });
+      } else {
+        setStatus({ type: 'error', msg: "Upload failed." });
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', msg: "Upload error." });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const urls = artifactForm.imageUrls.split('\n').filter(Boolean);
+    urls.splice(index, 1);
+    setArtifactForm({ ...artifactForm, imageUrls: urls.join('\n') });
   };
 
   const handleArtifactSubmit = async (e: React.FormEvent) => {
@@ -180,6 +227,13 @@ export default function AdminPage() {
       }
       return m;
     }));
+  };
+
+  const handleDeleteMember = (id: string) => {
+    if (confirm("Are you sure you want to terminate this operative's access? This action is permanent.")) {
+      setMembers(members.filter(m => m.id !== id));
+      setStatus({ type: 'success', msg: `Operative ${id} has been permanently removed.` });
+    }
   };
 
   const cycleClearance = (id: string) => {
@@ -411,6 +465,144 @@ export default function AdminPage() {
                                 className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase" 
                              />
                           </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Category</label>
+                             <select 
+                                value={artifactForm.category}
+                                onChange={e => setArtifactForm({...artifactForm, category: e.target.value})}
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             >
+                                <option value="HEAD SCULPT">HEAD SCULPT</option>
+                                <option value="FULL CUSTOM">FULL CUSTOM</option>
+                                <option value="COLLECTIBLE">COLLECTIBLE</option>
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Status</label>
+                             <select 
+                                value={artifactForm.status}
+                                onChange={e => setArtifactForm({...artifactForm, status: e.target.value})}
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             >
+                                <option value="AVAILABLE">AVAILABLE</option>
+                                <option value="LIMITED">LIMITED</option>
+                                <option value="PRE-ORDER">PRE-ORDER</option>
+                                <option value="SOLD OUT">SOLD OUT</option>
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Scale</label>
+                             <input 
+                                value={artifactForm.scale}
+                                onChange={e => setArtifactForm({...artifactForm, scale: e.target.value})}
+                                placeholder="e.g. 1/6 or Non-scale"
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Material</label>
+                             <select 
+                                value={artifactForm.material}
+                                onChange={e => setArtifactForm({...artifactForm, material: e.target.value})}
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             >
+                                <option value="RESIN">RESIN</option>
+                                <option value="PRO-POLY">PRO-POLY</option>
+                                <option value="VINYL">VINYL</option>
+                                <option value="MIXED">MIXED</option>
+                                <option value="PVC">PVC</option>
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Condition</label>
+                             <select 
+                                value={artifactForm.condition}
+                                onChange={e => setArtifactForm({...artifactForm, condition: e.target.value})}
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             >
+                                <option value="MISB">MISB (Mint in Sealed Box)</option>
+                                <option value="MIB">MIB (Mint in Box)</option>
+                                <option value="BIB">BIB (Back in Box)</option>
+                                <option value="NRFB">NRFB (Never Removed From Box)</option>
+                                <option value="NIB">NIB (New in Box)</option>
+                                <option value="Loose - Mint">Loose - Mint</option>
+                                <option value="Loose - Good">Loose - Good</option>
+                                <option value="Damaged Box">Damaged Box</option>
+                                <option value="Used - Acceptable">Used - Acceptable</option>
+                                <option value="Parts/Repair">Parts/Repair</option>
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Manufacturer</label>
+                             <input 
+                                value={artifactForm.manufacturer}
+                                onChange={e => setArtifactForm({...artifactForm, manufacturer: e.target.value})}
+                                placeholder="e.g. Vault 6 Studios"
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Stocks Volume</label>
+                             <input 
+                                type="number"
+                                min="0"
+                                value={artifactForm.inventory}
+                                onChange={e => setArtifactForm({...artifactForm, inventory: parseInt(e.target.value) || 0})}
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none"
+                             />
+                          </div>
+                          <div className="md:col-span-2 space-y-2">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Product Highlights (One per line)</label>
+                             <textarea 
+                                value={artifactForm.highlights}
+                                onChange={e => setArtifactForm({...artifactForm, highlights: e.target.value})}
+                                placeholder="E.g. Ultra-flexibility chassis&#10;Real fabric clothing"
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-wider focus:border-v6-accent focus:outline-none min-h-[100px]"
+                             />
+                          </div>
+                          <div className="md:col-span-2 space-y-4">
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Photo Options (Upload Images)</label>
+                             
+                             {/* Preview Gallery */}
+                             {artifactForm.imageUrls && (
+                               <div className="flex gap-4 overflow-x-auto pb-2">
+                                 {artifactForm.imageUrls.split('\n').filter(Boolean).map((url, idx) => (
+                                   <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-foreground/10 flex-shrink-0 group bg-foreground/5">
+                                     <img src={url} alt={`Preview ${idx}`} className="object-cover w-full h-full" />
+                                     <button 
+                                       type="button"
+                                       onClick={() => removeImage(idx)}
+                                       className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                     >
+                                       <X size={12} />
+                                     </button>
+                                   </div>
+                                 ))}
+                               </div>
+                             )}
+
+                             {/* Upload Input */}
+                             <div className="relative w-full bg-background border border-foreground/10 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 hover:border-v6-accent transition-colors">
+                               {isUploading ? (
+                                 <div className="flex items-center gap-2 text-v6-accent font-mono text-[10px] tracking-widest uppercase animate-pulse">
+                                   <div className="w-4 h-4 border-2 border-v6-accent border-t-transparent rounded-full animate-spin" />
+                                   Uploading...
+                                 </div>
+                               ) : (
+                                 <>
+                                   <Package size={24} className="opacity-20 mb-2" />
+                                   <span className="text-[10px] font-black uppercase tracking-widest">Click or drag images to upload</span>
+                                   <input 
+                                     type="file" 
+                                     multiple 
+                                     accept="image/*"
+                                     onChange={handleFileUpload}
+                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                   />
+                                 </>
+                               )}
+                             </div>
+                          </div>
                           <div className="md:col-span-2">
                              <button type="submit" className="w-full bg-foreground text-background rounded-2xl py-5 font-black uppercase tracking-[0.4em] hover:bg-v6-accent hover:text-white transition-all shadow-xl">
                                 {editingId ? "AUTHORIZE MODIFICATION" : "COMMENCE DEPLOYMENT"}
@@ -423,11 +615,13 @@ export default function AdminPage() {
 
                {/* Table */}
                <div className="bg-foreground/[0.02] border border-foreground/5 rounded-[2rem] overflow-hidden shadow-2xl">
-                  <table className="w-full text-left border-collapse">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                      <thead>
                         <tr className="border-b border-foreground/5 bg-foreground/[0.01]">
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Deployment ID</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Artifact Name</th>
+                           <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Category</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Series</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Status</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em] text-right">Actions</th>
@@ -440,6 +634,7 @@ export default function AdminPage() {
                            <tr key={item.id} className="group hover:bg-foreground/[0.02] transition-colors">
                               <td className="p-6"><p className="text-[10px] font-black font-mono tracking-widest opacity-50">{item.deploymentId}</p></td>
                               <td className="p-6"><p className="text-sm font-black uppercase italic">{item.name}</p></td>
+                              <td className="p-6"><p className="text-[10px] font-black opacity-80 tracking-widest">{item.category}</p></td>
                               <td className="p-6"><span className="text-[9px] font-black px-2 py-1 rounded bg-v6-accent/10 v6-accent-text tracking-widest">{item.series}</span></td>
                               <td className="p-6"><p className="text-[10px] font-black opacity-60 tracking-widest">{item.status}</p></td>
                               <td className="p-6 text-right">
@@ -452,6 +647,7 @@ export default function AdminPage() {
                         ))}
                      </tbody>
                   </table>
+                  </div>
                </div>
             </div>
           )}
@@ -582,6 +778,13 @@ export default function AdminPage() {
                                    >
                                      {member.status === 'ACTIVE' ? 'Restrict' : 'Restore'}
                                    </button>
+                                   <button 
+                                     onClick={() => handleDeleteMember(member.id)}
+                                     className="p-3 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all shadow-sm"
+                                     title="Terminate Operative"
+                                   >
+                                     <Trash2 size={12} />
+                                   </button>
                                  </div>
                               </td>
                            </tr>
@@ -611,9 +814,6 @@ export default function AdminPage() {
                     { key: "hero_subtitle", label: "Hero Subtitle" },
                     { key: "hero_subheading", label: "Hero Sub-Heading" },
                     { key: "hero_description", label: "Brand Narrative", isTextarea: true },
-                    { key: "marquee_syndicate_status", label: "Marquee Label" },
-                    { key: "marquee_member_count", label: "Active Member Count" },
-                    { key: "marquee_vault_status", label: "Vault Operational Status" },
                   ].map((setting) => (
                     <div key={setting.key} className="bg-foreground/[0.02] dark:bg-white/[0.02] border border-foreground/10 rounded-[2.5rem] p-8 space-y-6 relative overflow-hidden group">
                        <div className="flex justify-between items-start">

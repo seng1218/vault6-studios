@@ -33,10 +33,7 @@ export default async function RootLayout({
     hero_title: "VAULT 6",
     hero_subtitle: "STUDIOS",
     hero_subheading: "Premium Artifact Database",
-    hero_description: "Authenticated Japanese collectible figures — curated for serious collectors.",
-    marquee_syndicate_status: "SYNDICATE",
-    marquee_member_count: "847",
-    marquee_vault_status: "OPERATIONAL"
+    hero_description: "Authenticated Japanese collectible figures — curated for serious collectors."
   };
 
   return (

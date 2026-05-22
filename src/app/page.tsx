@@ -7,15 +7,18 @@ import { ImageSequenceViewer } from "@/components/image-sequence-viewer";
 import { motion, useScroll, useTransform, useSpring, motionValue, useMotionValue, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ShieldCheck, Activity, Cpu, ArrowRight, Search, ShoppingBag, ChevronDown, Loader2 } from "lucide-react";
+import { ShieldCheck, Activity, ArrowRight, Search, ChevronDown, Loader2 } from "lucide-react";
 import type { FrameAdjustment } from "@/components/image-sequence-viewer";
 import { useSettings } from "@/components/settings-provider";
-import { useCart } from "@/components/cart-provider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { playHoverSound, playClickSound, playSuccessSound } from "@/lib/sound-effects";
+
+// Dynamic loading of showroom components to prevent hydration mismatch/SSR errors
+const FigurineShowcase = dynamic(() => import("@/components/figurine-showcase").then(mod => mod.FigurineShowcase), { ssr: false });
 
 export default function Home() {
-  const { addToCart } = useCart();
   const router = useRouter();
   const [trackId, setTrackId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -23,19 +26,28 @@ export default function Home() {
   const [isHoveringVault, setIsHoveringVault] = useState(false);
 
   const figurineFrames = Array.from({ length: 25 }, (_, i) => `/frames/${(i + 1).toString().padStart(2, '0')}.png`);
-  
+
   const handleHomeTrack = (e: React.FormEvent) => {
     e.preventDefault();
+    playClickSound();
     if (trackId) {
       router.push(`/tracking?id=${trackId}`);
     }
   };
+
+  const handleSyndicateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    playSuccessSound();
+    alert("TRANSMISSION SECURED. CLEARANCE IS PENDING.");
+  };
+
   const { settings } = useSettings();
 
   const frameAdjustments: FrameAdjustment[] = Array(25).fill({ scale: 1.0 });
 
   const { scrollYProgress } = useScroll();
   const springConfig = { damping: 40, stiffness: 200 };
+  const smoothScrollYProgress = useSpring(scrollYProgress, { damping: 50, stiffness: 150 });
 
   const time = motionValue(0);
   useEffect(() => {
@@ -77,13 +89,13 @@ export default function Home() {
   const combinedProgress = useMotionValue(0);
   useEffect(() => {
     const updateCombined = () => {
-      const scroll = scrollYProgress.get();
+      const scroll = smoothScrollYProgress.get();
       const idle = idleRotation.get();
       const blend = blendValue.get();
       combinedProgress.set(idle * (1 - blend) + scroll * blend);
     };
 
-    const unsubScroll = scrollYProgress.on("change", updateCombined);
+    const unsubScroll = smoothScrollYProgress.on("change", updateCombined);
     const unsubIdle = idleRotation.on("change", updateCombined);
     const unsubBlend = blendValue.on("change", updateCombined);
 
@@ -92,12 +104,14 @@ export default function Home() {
       unsubIdle();
       unsubBlend();
     };
-  }, [scrollYProgress, idleRotation, blendValue, combinedProgress]);
+  }, [smoothScrollYProgress, idleRotation, blendValue, combinedProgress]);
 
   const currentIndex = useMotionValue(0);
   useEffect(() => {
     const unsub = combinedProgress.on("change", (v) => {
-      currentIndex.set(Math.min(Math.floor(v * figurineFrames.length), figurineFrames.length - 1));
+      const floatIndex = v * (figurineFrames.length - 1);
+      const clamped = Math.max(0, Math.min(figurineFrames.length - 1, floatIndex));
+      currentIndex.set(clamped);
     });
     return unsub;
   }, [combinedProgress, figurineFrames.length, currentIndex]);
@@ -110,14 +124,14 @@ export default function Home() {
       setLoadingProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setIsLoading(false), 500); // Small delay after 100%
+          setTimeout(() => setIsLoading(false), 200); // Small delay after 100%
           return 100;
         }
         // Random increments for a more "real" feel
         const inc = Math.floor(Math.random() * 8) + 2;
         return Math.min(prev + inc, 100);
       });
-    }, 150);
+    }, 60);
 
     const ctx = gsap.context(() => {
       if (!isLoading) {
@@ -190,7 +204,7 @@ export default function Home() {
           x={x}
           scale={scale}
           frameAdjustments={frameAdjustments}
-          scrollYProgress={scrollYProgress}
+          scrollYProgress={smoothScrollYProgress}
           isHovered={isHoveringVault}
         />
       </div>
@@ -226,7 +240,18 @@ export default function Home() {
             {settings.hero_description}
           </p>
           <div className="flex flex-col items-center justify-center mt-12 pointer-events-auto">
-            <Link href="/collection" className="group relative bg-foreground text-background px-12 py-6 font-black text-xs uppercase tracking-[0.4em] flex items-center gap-4 hover:text-white transition-all overflow-hidden shadow-2xl">
+            <Link 
+              href="/collection" 
+              onMouseEnter={() => {
+                playHoverSound();
+                setIsHoveringVault(true);
+              }}
+              onMouseLeave={() => {
+                setIsHoveringVault(false);
+              }}
+              onClick={playClickSound}
+              className="group relative bg-foreground text-background px-12 py-6 font-black text-xs uppercase tracking-[0.4em] flex items-center gap-4 hover:text-white transition-all overflow-hidden shadow-2xl"
+            >
                <div className="absolute inset-0 bg-v6-accent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
                <span className="relative z-10 font-black">Enter Vault</span>
                <ArrowRight className="relative z-10 group-hover:translate-x-2 transition-transform" size={18} />
@@ -273,6 +298,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Premium Figurine Showcase Section */}
+      <section className="relative py-32 px-6 md:px-24 z-20 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-12">
+          <div data-reveal className="space-y-4 max-w-2xl">
+            <span className="v6-accent-text font-black text-[10px] uppercase tracking-[0.5em] block">Interactive Showroom</span>
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none">SYSTEM CORE <br />CONFIGURATOR.</h2>
+            <p className="opacity-60 text-sm md:text-base font-bold uppercase tracking-widest leading-relaxed">Rotate, inspect, and customize dynamic figurine specs and parameters in real time.</p>
+          </div>
+          
+          <div data-reveal className="w-full">
+            <FigurineShowcase />
+          </div>
+        </div>
+      </section>
+
       <section className="relative py-32 px-6 z-20 overflow-hidden">
         <div className="max-w-4xl mx-auto">
           <div data-reveal className="bg-foreground/[0.03] dark:bg-foreground/[0.01] border border-foreground/10 rounded-[3rem] p-12 md:p-20 shadow-2xl relative overflow-hidden">
@@ -300,60 +340,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative min-h-screen py-32 px-6 md:px-24 z-20">
-        <div className="bg-foreground/[0.02] backdrop-blur-3xl p-12 md:p-24 rounded-[4rem] shadow-2xl border border-foreground/5">
-          <div data-reveal className="flex flex-col md:flex-row justify-between items-end mb-24">
-            <h2 className="text-5xl md:text-9xl font-black uppercase tracking-tighter italic">THE VAULT.</h2>
-            <p className="v6-accent-text max-w-xs mt-4 md:mt-0 font-black tracking-widest uppercase text-[10px]">
-              LIMITED STUDIO QUANTITIES
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {[
-              { name: "Krypton Legacy", price: "$35", type: "Head Sculpt" },
-              { name: "Detective Samurai", price: "$38", type: "Head Sculpt" },
-              { name: "Jeet Kune Do Master", price: "Sold Out", type: "Full Custom" },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                data-reveal-card
-                onMouseEnter={() => setIsHoveringVault(true)}
-                onMouseLeave={() => setIsHoveringVault(false)}
-                whileHover={{ y: -15, scale: 1.02 }}
-                className="group border border-foreground/5 p-12 flex flex-col aspect-square justify-between hover:bg-foreground/5 transition-all duration-500 rounded-[2.5rem] bg-background/40"
-              >
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40">{item.type}</span>
-                  <span className="text-sm font-mono font-black bg-foreground text-background px-4 py-1 rounded-full">{item.price}</span>
-                </div>
-                <div className="flex-1 flex items-center justify-center">
-                   <div className="w-40 h-40 rounded-full bg-v6-accent/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div>
-                  <h3 className="text-3xl font-black uppercase tracking-tighter italic">{item.name}</h3>
-                  <button 
-                    onClick={() => {
-                      if (item.price !== 'Sold Out') {
-                        addToCart({ 
-                          id: `V6-HOME-${i}`, 
-                          deploymentId: `V6-${item.name.toUpperCase().substring(0,3)}`, 
-                          name: item.name, 
-                          price: item.price 
-                        });
-                      }
-                    }}
-                    disabled={item.price === 'Sold Out'}
-                    className={`mt-8 w-full py-5 text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-lg ${item.price === 'Sold Out' ? 'bg-foreground/5 opacity-20 cursor-not-allowed' : 'bg-foreground text-background hover:bg-v6-accent hover:text-white'}`}
-                  >
-                    {item.price === 'Sold Out' ? "Secured" : "Acquire Artifact"}
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="relative h-screen flex flex-col items-center justify-center z-10 px-6">
         <div data-reveal className="text-center bg-v6-accent/5 backdrop-blur-3xl p-16 md:p-32 rounded-[5rem] border border-v6-accent/20 shadow-2xl relative overflow-hidden">
@@ -361,20 +348,25 @@ export default function Home() {
           <div className="relative z-10">
             <span className="inline-block text-[10px] bg-v6-accent text-white px-4 py-1.5 rounded-full font-black uppercase tracking-widest mb-8">Secured Connection</span>
             <h2 className="text-5xl md:text-[8rem] font-black mb-12 tracking-tighter uppercase italic leading-none">JOIN THE <br /><span className="v6-accent-text">SYNDICATE.</span></h2>
-            <div className="flex flex-col md:flex-row gap-4 mb-20 max-w-2xl mx-auto">
+            <form onSubmit={handleSyndicateSubmit} className="flex flex-col md:flex-row gap-4 mb-20 max-w-2xl mx-auto">
               <input 
                 type="email" 
+                required
                 placeholder="YOUR ENCRYPTED EMAIL" 
                 className="bg-background/40 border-2 border-foreground/10 rounded-3xl py-6 px-12 focus:outline-none focus:border-v6-accent w-full md:w-[450px] font-black text-sm tracking-widest text-center"
               />
-              <button className="bg-v6-accent text-white px-16 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-v6-accent/40">
+              <button 
+                type="submit"
+                onMouseEnter={playHoverSound}
+                className="bg-v6-accent text-white px-16 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-v6-accent/40"
+              >
                 REQUEST ACCESS
               </button>
-            </div>
+            </form>
             <div className="flex justify-center gap-16 text-[10px] font-black tracking-[0.5em] opacity-30">
-              <a href="#" className="hover:opacity-100 hover:text-v6-accent transition-all italic">INSTAGRAM</a>
-              <a href="#" className="hover:opacity-100 hover:text-v6-accent transition-all italic">TWITTER</a>
-              <a href="#" className="hover:opacity-100 hover:text-v6-accent transition-all italic">DISCORD</a>
+              <a href="#" onMouseEnter={playHoverSound} onClick={playClickSound} className="hover:opacity-100 hover:text-v6-accent transition-all italic">INSTAGRAM</a>
+              <a href="#" onMouseEnter={playHoverSound} onClick={playClickSound} className="hover:opacity-100 hover:text-v6-accent transition-all italic">TWITTER</a>
+              <a href="#" onMouseEnter={playHoverSound} onClick={playClickSound} className="hover:opacity-100 hover:text-v6-accent transition-all italic">DISCORD</a>
             </div>
           </div>
         </div>

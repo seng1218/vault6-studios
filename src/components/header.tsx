@@ -2,20 +2,42 @@
 
 import React from "react";
 import { useTheme } from "next-themes";
-import { Moon, Sun, ShoppingBag, X as CloseIcon } from "lucide-react";
+import { Moon, Sun, ShoppingBag, X as CloseIcon, Volume1, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSettings } from "@/components/settings-provider";
 import { useCart } from "@/components/cart-provider";
+import { playHoverSound, playClickSound, playSuccessSound, getSoundMode, setSoundMode, SoundMode } from "@/lib/sound-effects";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
+  const [soundMode, setSoundModeState] = React.useState<SoundMode>("minimal");
   const { settings } = useSettings();
   const { totalItems } = useCart();
 
-  React.useEffect(() => setMounted(true), []);
+  React.useEffect(() => {
+    setMounted(true);
+    setSoundModeState(getSoundMode());
+  }, []);
+
+  const cycleSoundMode = () => {
+    let nextMode: SoundMode = "minimal";
+    if (soundMode === "minimal") nextMode = "retro";
+    else if (soundMode === "retro") nextMode = "mechanical";
+    else if (soundMode === "mechanical") nextMode = "muted";
+    else if (soundMode === "muted") nextMode = "minimal";
+    
+    setSoundMode(nextMode);
+    setSoundModeState(nextMode);
+    
+    setTimeout(() => {
+      if (nextMode !== "muted") {
+        playSuccessSound();
+      }
+    }, 50);
+  };
 
   if (!mounted) return null;
 
@@ -30,8 +52,8 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 w-full z-[100] pointer-events-none">
       {/* 1. Main Navigation Bar */}
-      <div className="flex justify-between items-center px-6 py-8 md:px-12 pointer-events-auto">
-        <Link href="/" onClick={() => setIsOpen(false)}>
+      <div className="flex justify-between items-center px-6 py-6 md:px-12 pointer-events-auto">
+        <Link href="/" onClick={() => { playClickSound(); setIsOpen(false); }} onMouseEnter={playHoverSound}>
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -46,9 +68,10 @@ export function Header() {
           </motion.div>
         </Link>
 
-        <div className="flex items-center space-x-6 text-foreground z-[110]">
+        <div className="flex items-center space-x-2 md:space-x-6 text-foreground z-[110]">
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onMouseEnter={playHoverSound}
+            onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
             className="flex items-center gap-3 px-6 py-3 border border-foreground/10 rounded-xl hover:bg-foreground/5 transition-all group overflow-hidden relative"
           >
              <div className="absolute inset-y-0 left-0 w-1 bg-v6-accent -translate-x-full group-hover:translate-x-0 transition-transform" />
@@ -73,13 +96,37 @@ export function Header() {
           
           <div className="hidden md:flex items-center space-x-3">
             <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              onMouseEnter={playHoverSound}
+              onClick={() => { playClickSound(); setTheme(theme === "dark" ? "light" : "dark"); }}
               className="p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent hover:border-foreground/10"
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <Link href="/checkout" className="p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative">
+
+            {/* Sound Mode Toggle */}
+            <button
+              onMouseEnter={playHoverSound}
+              onClick={cycleSoundMode}
+              className="hidden md:flex p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 items-center gap-2 group relative"
+              aria-label="Cycle Sound Mode"
+              title={`Sound Mode: ${soundMode.toUpperCase()}`}
+            >
+              {soundMode === "minimal" && <Volume1 size={18} className="text-foreground" />}
+              {soundMode === "retro" && <Volume2 size={18} className="text-v6-accent animate-pulse" />}
+              {soundMode === "mechanical" && <Volume2 size={18} className="text-yellow-500" />}
+              {soundMode === "muted" && <VolumeX size={18} className="opacity-40" />}
+              <span className="hidden xl:inline text-[7px] font-black tracking-widest uppercase opacity-45 group-hover:opacity-100 transition-opacity">
+                {soundMode}
+              </span>
+            </button>
+
+            <Link 
+              href="/checkout" 
+              onMouseEnter={playHoverSound}
+              onClick={playClickSound}
+              className="p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative"
+            >
               <ShoppingBag size={18} />
               {totalItems > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 bg-v6-accent text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg shadow-v6-accent/20">
@@ -115,20 +162,34 @@ export function Header() {
               {navLinks.map((link, i) => (
                 <motion.div
                   key={link.name}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.05 }}
-                  className="group"
+                  initial={{ opacity: 0, x: -50, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  transition={{ 
+                    duration: 0.8, 
+                    delay: 0.15 + i * 0.1,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                  className="group relative"
                 >
+                  {/* Cinematic Background Text on Hover (Specific to Archive) */}
+                  {link.name === "ARCHIVE" && (
+                    <div className="fixed inset-0 w-screen h-screen -z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center">
+                      <span className="text-[15vw] font-black uppercase text-outline opacity-10 blur-sm whitespace-nowrap pointer-events-none">
+                        VAULT SERIES
+                      </span>
+                    </div>
+                  )}
+
                   <Link 
                     href={link.href} 
-                    onClick={() => setIsOpen(false)}
-                    className="flex flex-col md:flex-row md:items-end gap-2 md:gap-8 hover:v6-accent-text transition-colors"
+                    onMouseEnter={playHoverSound}
+                    onClick={() => { playClickSound(); setIsOpen(false); }}
+                    className="flex flex-col md:flex-row md:items-end gap-2 md:gap-8 hover:v6-accent-text transition-colors relative"
                   >
                     <span className="text-[10px] font-black v6-accent-text opacity-50 font-mono tracking-widest">
                       0{i + 1}
                     </span>
-                    <h2 className="text-4xl md:text-8xl font-black italic uppercase leading-none tracking-tighter group-hover:translate-x-4 transition-transform duration-500 flex items-center gap-4">
+                    <h2 className="text-4xl md:text-8xl font-black italic uppercase leading-none tracking-tighter group-hover:translate-x-6 transition-transform duration-700 flex items-center gap-4">
                       {link.name}
                       {link.name === "3D KITS" && (
                         <span className="text-[10px] md:text-sm font-black bg-orange-500 text-white px-3 py-1 rounded-full not-italic tracking-widest align-middle">
@@ -144,12 +205,12 @@ export function Header() {
               ))}
             </nav>
 
-            <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end z-10">
-               <div className="space-y-2">
+            <div className="absolute bottom-6 md:bottom-12 left-6 md:left-12 right-6 md:right-12 flex flex-col md:flex-row justify-between items-start md:items-end z-10 gap-4">
+               <div className="space-y-1 md:space-y-2">
                  <p className="text-[8px] font-black opacity-30 tracking-[0.5em] uppercase">SYSTEM PROTOCOL</p>
                  <p className="text-[10px] font-black uppercase tracking-[0.2em] v6-accent-text">V6-AUTH-ACTIVE</p>
                </div>
-               <div className="flex gap-12 text-[10px] font-black tracking-[0.3em] opacity-40">
+               <div className="flex flex-wrap gap-4 md:gap-12 text-[10px] font-black tracking-[0.3em] opacity-40">
                   <a href="#" className="hover:opacity-100 italic">INSTAGRAM</a>
                   <a href="#" className="hover:opacity-100 italic">TWITTER</a>
                   <a href="#" className="hover:opacity-100 italic">DISCORD</a>

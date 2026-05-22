@@ -40,9 +40,6 @@ export async function seedDefaultSettings() {
     { key: "hero_subtitle", value: "Studios" },
     { key: "hero_subheading", value: "Premium Artifact Database" },
     { key: "hero_description", value: "Authenticated Japanese collectible figures — curated for serious collectors." },
-    { key: "marquee_syndicate_status", value: "SYNDICATE" },
-    { key: "marquee_member_count", value: "847" },
-    { key: "marquee_vault_status", value: "OPERATIONAL" },
   ];
 
   try {

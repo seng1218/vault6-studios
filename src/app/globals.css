@@ -22,6 +22,14 @@
   --color-v6-accent: var(--v6-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-scan: scan 6s linear infinite;
+
+  @keyframes scan {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+  }
 }
 
 body {
