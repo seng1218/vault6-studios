@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
-	"name": "figurine-web",
+	"name": "vault6-studios",
 	"compatibility_date": "2026-04-15",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
@@ -10,9 +10,8 @@
 	},
 	"services": [
 		{
-			// Self-reference binding required for ISR/revalidation
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "figurine-web"
+			"service": "vault6-studios"
 		}
 	]
 }
