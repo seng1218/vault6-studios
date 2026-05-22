@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "cf:build": "prisma generate && npx opennextjs-cloudflare build",
+    "cf:build": "prisma generate && rm -rf .open-next && npx opennextjs-cloudflare build",
     "cf:preview": "npm run cf:build && npx wrangler dev",
     "cf:deploy": "npm run cf:build && npx opennextjs-cloudflare deploy"
   },
