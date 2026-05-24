@@ -4,17 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "cf:build": "prisma generate && rm -rf .open-next && npx opennextjs-cloudflare build",
+    "prisma:generate": "prisma generate",
+    "cf:build": "rm -rf .open-next && npx opennextjs-cloudflare build",
     "cf:preview": "npm run cf:build && npx wrangler dev",
     "cf:deploy": "npm run cf:build && npx opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "@opennextjs/cloudflare": "^1.14.1",
-    "@prisma/adapter-libsql": "^7.8.0",
+    "@prisma/adapter-libsql": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",

@@ -29,12 +29,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settingsRes = await getSettings();
-  const initialSettings = settingsRes.success ? settingsRes.data : {
+  const settingsDefaults = {
     hero_title: "VAULT 6",
     hero_subtitle: "STUDIOS",
     hero_subheading: "Premium Artifact Database",
-    hero_description: "Authenticated Japanese collectible figures — curated for serious collectors."
+    hero_description: "Authenticated Japanese collectible figures — curated for serious collectors.",
   };
+  const initialSettings = { ...settingsDefaults, ...(settingsRes.success ? settingsRes.data : {}) };
 
   return (
     <html lang="en" suppressHydrationWarning>

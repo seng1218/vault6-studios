@@ -1,0 +1,36 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build and deploy to Cloudflare
+        run: npm run cf:deploy
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          FIUU_MERCHANT_ID: ${{ secrets.FIUU_MERCHANT_ID }}
+          FIUU_VERIFY_KEY: ${{ secrets.FIUU_VERIFY_KEY }}
+          FIUU_SECRET_KEY: ${{ secrets.FIUU_SECRET_KEY }}
+          FIUU_PAYMENT_URL: ${{ secrets.FIUU_PAYMENT_URL }}
