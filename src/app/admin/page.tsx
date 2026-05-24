@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [siteSettings, setSiteSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,15 +77,20 @@ export default function AdminPage() {
 
   const loadData = async () => {
     setLoading(true);
+    setDbError(null);
     const [artRes, setRes, ordRes] = await Promise.all([
       fetchArtifacts(),
       getSettings(),
       fetchOrders()
     ]);
-    
+
     if (artRes.success) setArtifacts(artRes.data || []);
     if (setRes.success) setSiteSettings(setRes.data || {});
     if (ordRes.success) setOrders(ordRes.data || []);
+
+    if (!artRes.success && !setRes.success && !ordRes.success) {
+      setDbError("Database unreachable. Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.");
+    }
     setLoading(false);
   };
 
@@ -205,6 +211,8 @@ export default function AdminPage() {
       setStatus({ type: 'success', msg: "Default settings restored." });
       refreshSettings();
       loadData();
+    } else {
+      setStatus({ type: 'error', msg: "Failed to restore defaults. Check database connection." });
     }
   };
 
@@ -214,6 +222,8 @@ export default function AdminPage() {
     if (res.success) {
       setStatus({ type: 'success', msg: `Setting [${key}] saved to database.` });
       refreshSettings();
+    } else {
+      setStatus({ type: 'error', msg: res.error || `Failed to save [${key}].` });
     }
   };
 
@@ -361,6 +371,14 @@ export default function AdminPage() {
              </button>
            </div>
         </div>
+
+        {/* DB Error Banner */}
+        {dbError && (
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-red-500/10 border-red-500/20 text-red-500">
+            <AlertCircle size={16} className="shrink-0" />
+            <p className="text-[10px] font-black uppercase tracking-widest">{dbError}</p>
+          </div>
+        )}
 
         {/* Status Alerts */}
         <AnimatePresence>
