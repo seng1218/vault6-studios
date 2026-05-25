@@ -89,7 +89,7 @@ export default function AdminPage() {
     if (ordRes.success) setOrders(ordRes.data || []);
 
     if (!artRes.success && !setRes.success && !ordRes.success) {
-      setDbError("Database unreachable. Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.");
+      setDbError("Database unreachable. Check D1 binding and Cloudflare Worker configuration.");
     }
     setLoading(false);
   };
