@@ -13,5 +13,12 @@
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "vault6-studios"
 		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "vault6-studios-db",
+			"database_id": "32792b00-e7d8-4af1-9df5-cc51564c2927"
+		}
 	]
 }
