@@ -38,7 +38,7 @@ export async function seedDefaultSettings() {
   const defaults = [
     { key: "hero_title", value: "Vault 6" },
     { key: "hero_subtitle", value: "Studios" },
-    { key: "hero_subheading", value: "Premium Artifact Database" },
+    { key: "hero_subheading", value: "By Crafted Legacies" },
     { key: "hero_description", value: "Authenticated Japanese collectible figures — curated for serious collectors." },
   ];
 
