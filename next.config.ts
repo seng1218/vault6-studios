@@ -3,7 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   turbopack: {
-    resolveConditions: ["workerd"],
+    resolveAlias: {
+      "@prisma/client": "./node_modules/.prisma/client/wasm.js",
+    },
   },
 };
 
