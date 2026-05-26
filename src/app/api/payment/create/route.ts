@@ -5,7 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 const FIUU_MERCHANT_ID = process.env.FIUU_MERCHANT_ID ?? "";
 const FIUU_VERIFY_KEY = process.env.FIUU_VERIFY_KEY ?? "";
 const FIUU_PAYMENT_URL =
-  process.env.FIUU_PAYMENT_URL ?? "https://payment.fiuu.com/RMS/pay/";
+  process.env.FIUU_PAYMENT_URL ?? `https://pay.fiuu.com/MOLPay/pay/${FIUU_MERCHANT_ID}/`;
 const SITE_URL = process.env.SITE_URL ?? "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
@@ -81,26 +81,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // vcode = MD5(amount + merchant_id + orderid + verify_key)
+    // Extended vcode = MD5(amount + merchant_id + orderid + verify_key + currency)
     const vcode = crypto
       .createHash("md5")
-      .update(amount + FIUU_MERCHANT_ID + orderNumber + FIUU_VERIFY_KEY)
+      .update(amount + FIUU_MERCHANT_ID + orderNumber + FIUU_VERIFY_KEY + "MYR")
       .digest("hex");
 
     const fiuuCountry = country === "INTERNATIONAL" ? "OT" : "MY";
 
+    // Sanitize phone: digits and leading + only (no spaces/dashes)
+    const bill_mobile = customerPhone.replace(/[^\d+]/g, "");
+
     return NextResponse.json({
       paymentUrl: FIUU_PAYMENT_URL,
       params: {
-        merchant_id: FIUU_MERCHANT_ID,
         orderid: orderNumber,
         amount,
         bill_name: customerName,
         bill_email: customerEmail,
-        bill_mobile: customerPhone,
-        bill_desc: `Vault 6 Studios Order ${orderNumber}`,
+        bill_mobile,
+        bill_desc: `Order ${orderNumber}`,
         country: fiuuCountry,
-        currency: "MYR",
+        cur: "MYR",
+        logo: `${SITE_URL}/logo.png`,
         returnurl: `${SITE_URL}/api/payment/return`,
         callbackurl: `${SITE_URL}/api/payment/callback`,
         vcode,

@@ -18,16 +18,25 @@ export async function POST(req: NextRequest) {
     const orderid = body.get("orderid") as string;
     const domain = body.get("domain") as string;
     const amount = body.get("amount") as string;
+    const currency = (body.get("currency") as string) || "MYR";
+    const paydate = body.get("paydate") as string;
+    const appcode = body.get("appcode") as string;
     const skey = body.get("skey") as string;
 
     if (!status || !tranID || !orderid || !domain || !amount || !skey) {
       return new NextResponse("RECEIVEOK", { status: 200 });
     }
 
-    // Verify skey: MD5(tranID + domain + status + amount + verify_key)
+    // Extended skey verification (two-step):
+    // key0 = MD5(tranID + orderid + status + domain + amount + currency)
+    // key1 = MD5(paydate + domain + key0 + appcode + verify_key)
+    const key0 = crypto
+      .createHash("md5")
+      .update(tranID + orderid + status + domain + amount + currency)
+      .digest("hex");
     const expectedSkey = crypto
       .createHash("md5")
-      .update(tranID + domain + status + amount + FIUU_VERIFY_KEY)
+      .update((paydate ?? "") + domain + key0 + (appcode ?? "") + FIUU_VERIFY_KEY)
       .digest("hex");
 
     if (expectedSkey !== skey) {

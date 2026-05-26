@@ -42,7 +42,6 @@ export function Header() {
   if (!mounted) return null;
 
   const navLinks = [
-    { name: "ARCHIVE", href: "/collection", desc: "Browse our full collection" },
     { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
     { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
     { name: "JOIN US", href: "/join", desc: "Sign up for exclusive access" },
@@ -69,6 +68,18 @@ export function Header() {
         </Link>
 
         <div className="flex items-center space-x-2 md:space-x-6 text-foreground z-[110]">
+          {/* Persistent Vault Link */}
+          <Link 
+            href="/collection" 
+            onMouseEnter={playHoverSound}
+            onClick={() => { playClickSound(); setIsOpen(false); }}
+            className="flex items-center gap-2 px-6 py-3 border border-foreground/10 rounded-xl hover:bg-v6-accent hover:text-white hover:border-v6-accent transition-all group relative overflow-hidden"
+          >
+             <div className="absolute inset-y-0 left-0 w-1 bg-white -translate-x-full group-hover:translate-x-0 transition-transform" />
+             <div className="w-1 h-1 bg-v6-accent rounded-full group-hover:bg-white animate-pulse" />
+             <span className="text-[10px] font-black tracking-[0.3em] uppercase">VAULT</span>
+          </Link>
+
           <button
             onMouseEnter={playHoverSound}
             onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
@@ -94,6 +105,21 @@ export function Header() {
              </div>
           </button>
           
+          {/* Cart icon — always visible */}
+          <Link
+            href="/checkout"
+            onMouseEnter={playHoverSound}
+            onClick={playClickSound}
+            className="p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative"
+          >
+            <ShoppingBag size={18} />
+            {totalItems > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 bg-v6-accent text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg shadow-v6-accent/20">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+
           <div className="hidden md:flex items-center space-x-3">
             <button
               onMouseEnter={playHoverSound}
@@ -120,20 +146,6 @@ export function Header() {
                 {soundMode}
               </span>
             </button>
-
-            <Link 
-              href="/checkout" 
-              onMouseEnter={playHoverSound}
-              onClick={playClickSound}
-              className="p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative"
-            >
-              <ShoppingBag size={18} />
-              {totalItems > 0 && (
-                <span className="absolute top-0 right-0 w-4 h-4 bg-v6-accent text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg shadow-v6-accent/20">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
           </div>
         </div>
       </div>
@@ -171,15 +183,6 @@ export function Header() {
                   }}
                   className="group relative"
                 >
-                  {/* Cinematic Background Text on Hover (Specific to Archive) */}
-                  {link.name === "ARCHIVE" && (
-                    <div className="fixed inset-0 w-screen h-screen -z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center">
-                      <span className="text-[15vw] font-black uppercase text-outline opacity-10 blur-sm whitespace-nowrap pointer-events-none">
-                        VAULT SERIES
-                      </span>
-                    </div>
-                  )}
-
                   <Link 
                     href={link.href} 
                     onMouseEnter={playHoverSound}

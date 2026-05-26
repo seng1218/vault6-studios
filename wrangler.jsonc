@@ -33,6 +33,6 @@
 		"FIUU_MERCHANT_ID": "craftedlegacies",
 		"FIUU_VERIFY_KEY": "e85a59067215aa8d7ab9be50837a3030",
 		"FIUU_SECRET_KEY": "191085f2f8db77c6b32fdefe384cbf24",
-		"FIUU_PAYMENT_URL": "https://payment.fiuu.com/RMS/pay/"
+		"FIUU_PAYMENT_URL": "https://pay.fiuu.com/MOLPay/pay/craftedlegacies/"
 	}
 }
