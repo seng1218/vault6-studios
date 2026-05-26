@@ -20,5 +20,19 @@
 			"database_name": "vault6-studios-db",
 			"database_id": "32792b00-e7d8-4af1-9df5-cc51564c2927"
 		}
-	]
+	],
+	"r2_buckets": [
+		{
+			"binding": "R2_BUCKET",
+			"bucket_name": "vault6-studios-images"
+		}
+	],
+	"vars": {
+		"NEXT_PUBLIC_SITE_URL": "https://vault6studios.com",
+		"SITE_URL": "https://vault6studios.com",
+		"FIUU_MERCHANT_ID": "craftedlegacies",
+		"FIUU_VERIFY_KEY": "e85a59067215aa8d7ab9be50837a3030",
+		"FIUU_SECRET_KEY": "191085f2f8db77c6b32fdefe384cbf24",
+		"FIUU_PAYMENT_URL": "https://payment.fiuu.com/RMS/pay/"
+	}
 }

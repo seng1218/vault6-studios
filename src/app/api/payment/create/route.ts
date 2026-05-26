@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 const FIUU_MERCHANT_ID = process.env.FIUU_MERCHANT_ID ?? "";
 const FIUU_VERIFY_KEY = process.env.FIUU_VERIFY_KEY ?? "";
 const FIUU_PAYMENT_URL =
   process.env.FIUU_PAYMENT_URL ?? "https://payment.fiuu.com/RMS/pay/";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = process.env.SITE_URL ?? "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
   if (!FIUU_MERCHANT_ID || !FIUU_VERIFY_KEY) {
@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     const orderNumber = `V6-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const amount = Number(total).toFixed(2);
 
-    await prisma.order.create({
+    const db = await getPrisma();
+    await db.order.create({
       data: {
         orderNumber,
         customerName,

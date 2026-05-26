@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 const FIUU_VERIFY_KEY = process.env.FIUU_VERIFY_KEY ?? "";
+
+export async function GET() {
+  return new NextResponse("OK", { status: 200 });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +38,8 @@ export async function POST(req: NextRequest) {
     // "00" = success, "11" = failed, "22" = pending
     const orderStatus = status === "00" ? "PAID" : status === "22" ? "PENDING" : "FAILED";
 
-    await prisma.order.update({
+    const db = await getPrisma();
+    await db.order.update({
       where: { orderNumber: orderid },
       data: { status: orderStatus, transactionId: tranID },
     });
