@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 const FIUU_VERIFY_KEY = process.env.FIUU_VERIFY_KEY ?? "";
 
 export async function GET() {
-  return new NextResponse("OK", { status: 200 });
+  return new NextResponse("RECEIVEOK", { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const skey = body.get("skey") as string;
 
     if (!status || !tranID || !orderid || !domain || !amount || !skey) {
-      return new NextResponse("INVALID_PARAMS", { status: 400 });
+      return new NextResponse("RECEIVEOK", { status: 200 });
     }
 
     // Verify skey: MD5(tranID + domain + status + amount + verify_key)
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     if (expectedSkey !== skey) {
       console.error("[callback] skey mismatch", { expectedSkey, received: skey });
-      return new NextResponse("INVALID_SIGNATURE", { status: 400 });
+      return new NextResponse("RECEIVEOK", { status: 200 });
     }
 
     // "00" = success, "11" = failed, "22" = pending
@@ -45,9 +45,9 @@ export async function POST(req: NextRequest) {
     });
 
     revalidatePath("/admin");
-    return new NextResponse("OK", { status: 200 });
+    return new NextResponse("RECEIVEOK", { status: 200 });
   } catch (error) {
     console.error("[payment/callback]", error);
-    return new NextResponse("ERROR", { status: 500 });
+    return new NextResponse("RECEIVEOK", { status: 200 });
   }
 }

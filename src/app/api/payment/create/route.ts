@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         bill_desc: `Vault 6 Studios Order ${orderNumber}`,
         country: fiuuCountry,
         currency: "MYR",
-        returnurl: `${SITE_URL}/payment/return`,
+        returnurl: `${SITE_URL}/api/payment/return`,
         callbackurl: `${SITE_URL}/api/payment/callback`,
         vcode,
         lang: "en",
