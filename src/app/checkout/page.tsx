@@ -23,9 +23,9 @@ const REGIONS = [
 ];
 
 const inputClass =
-  "w-full bg-foreground/[0.03] border border-foreground/10 rounded-2xl p-6 text-xs font-black tracking-widest focus:border-v6-accent outline-none transition-all uppercase";
+  "w-full bg-foreground/[0.06] border border-foreground/20 rounded-2xl p-6 text-xs font-black tracking-widest text-foreground placeholder:text-foreground/40 focus:border-v6-accent focus:bg-foreground/10 outline-none transition-all uppercase";
 const labelClass =
-  "text-[8px] font-black opacity-30 uppercase tracking-widest ml-4";
+  "text-[9px] font-black opacity-50 uppercase tracking-widest ml-4";
 
 export default function CheckoutPage() {
   const { cart, removeFromCart, totalPrice, clearCart } = useCart();
@@ -264,8 +264,8 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Delivery summary */}
-                  <div className="bg-foreground/[0.03] border border-foreground/10 rounded-[2.5rem] p-10 space-y-4">
-                    <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-6">Delivery Details</p>
+                  <div className="bg-foreground/[0.06] border border-foreground/20 rounded-[2.5rem] p-10 space-y-4">
+                    <p className="text-[8px] font-black opacity-50 uppercase tracking-widest mb-6">Delivery Details</p>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-xs">
                       <div>
                         <p className="opacity-40 text-[8px] font-black uppercase tracking-widest">Name</p>
@@ -287,7 +287,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Payment gateway info */}
-                  <div className="bg-foreground/[0.03] border border-v6-accent/20 rounded-[2.5rem] p-10 space-y-6">
+                  <div className="bg-foreground/[0.06] border border-v6-accent/30 rounded-[2.5rem] p-10 space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-v6-accent/10 rounded-xl flex items-center justify-center">
@@ -300,15 +300,17 @@ export default function CheckoutPage() {
                           </p>
                         </div>
                       </div>
-                      <ExternalLink size={14} className="opacity-30" />
+                      <a href="https://fiuu.com" target="_blank" rel="noopener noreferrer" className="opacity-30 hover:opacity-70 transition-opacity">
+                        <ExternalLink size={14} />
+                      </a>
                     </div>
-                    <p className="text-[9px] font-black opacity-30 uppercase tracking-widest leading-relaxed">
+                    <p className="text-[9px] font-black opacity-50 uppercase tracking-widest leading-relaxed">
                       You will be redirected to Fiuu&apos;s hosted payment page. All payment data is handled
                       exclusively by Fiuu (BNM-licensed). We never see your card details.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-4 px-8 opacity-30">
+                  <div className="flex items-center gap-4 px-8 opacity-50">
                     <ShieldCheck size={16} />
                     <p className="text-[8px] font-black uppercase tracking-widest">
                       256-bit TLS · PCI DSS Compliant · BNM Licensed Gateway
@@ -337,7 +339,7 @@ export default function CheckoutPage() {
 
           {/* ── Cart Sidebar ── */}
           <div className="lg:col-span-5 space-y-12">
-            <div className="bg-foreground/[0.03] border border-foreground/10 rounded-[3rem] p-10 sticky top-48">
+            <div className="bg-foreground/[0.06] border border-foreground/20 rounded-[3rem] p-10 sticky top-48">
               <div className="flex justify-between items-center mb-10 pb-6 border-b border-foreground/5">
                 <h3 className="text-xl font-black italic uppercase tracking-tighter">Order Summary</h3>
                 <span className="text-[10px] font-black bg-foreground/10 px-3 py-1 rounded-full">{cart.length} ITEMS</span>

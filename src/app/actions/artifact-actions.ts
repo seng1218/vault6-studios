@@ -1,11 +1,12 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function fetchArtifacts() {
   try {
-    const artifacts = await prisma.artifact.findMany({
+    const db = await getPrisma();
+    const artifacts = await db.artifact.findMany({
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: artifacts };
@@ -17,7 +18,8 @@ export async function fetchArtifacts() {
 
 export async function fetchArtifactById(id: string) {
   try {
-    const artifact = await prisma.artifact.findUnique({
+    const db = await getPrisma();
+    const artifact = await db.artifact.findUnique({
       where: { id },
     });
     if (!artifact) return { success: false, error: "Artifact not found." };
@@ -30,7 +32,8 @@ export async function fetchArtifactById(id: string) {
 
 export async function createArtifact(data: any) {
   try {
-    const artifact = await prisma.artifact.create({
+    const db = await getPrisma();
+    const artifact = await db.artifact.create({
       data: {
         deploymentId: data.deploymentId,
         name: data.name,
@@ -44,21 +47,21 @@ export async function createArtifact(data: any) {
         imageUrls: data.imageUrls || "",
         condition: data.condition || "MISB",
         manufacturer: data.manufacturer || "Unknown",
-        inventory: data.inventory || 1,
+        inventory: data.inventory ?? 1,
       },
     });
-    revalidatePath("/collection");
-    revalidatePath("/admin");
+    try { revalidatePath("/collection"); revalidatePath("/admin"); } catch {}
     return { success: true, data: artifact };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database Error:", error);
-    return { success: false, error: "Failed to create artifact." };
+    return { success: false, error: error?.message || "Failed to create artifact." };
   }
 }
 
 export async function updateArtifact(id: string, data: any) {
   try {
-    const artifact = await prisma.artifact.update({
+    const db = await getPrisma();
+    const artifact = await db.artifact.update({
       where: { id },
       data: {
         deploymentId: data.deploymentId,
@@ -73,29 +76,28 @@ export async function updateArtifact(id: string, data: any) {
         imageUrls: data.imageUrls || "",
         condition: data.condition || "MISB",
         manufacturer: data.manufacturer || "Unknown",
-        inventory: data.inventory || 1,
+        inventory: data.inventory ?? 1,
       },
     });
-    revalidatePath("/collection");
-    revalidatePath("/admin");
+    try { revalidatePath("/collection"); revalidatePath("/admin"); } catch {}
     return { success: true, data: artifact };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database Error:", error);
-    return { success: false, error: "Failed to update artifact." };
+    return { success: false, error: error?.message || "Failed to update artifact." };
   }
 }
 
 export async function deleteArtifact(id: string) {
   try {
-    await prisma.artifact.delete({
+    const db = await getPrisma();
+    await db.artifact.delete({
       where: { id },
     });
-    revalidatePath("/collection");
-    revalidatePath("/admin");
+    try { revalidatePath("/collection"); revalidatePath("/admin"); } catch {}
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database Error:", error);
-    return { success: false, error: "Failed to delete artifact." };
+    return { success: false, error: error?.message || "Failed to delete artifact." };
   }
 }
 
@@ -110,8 +112,9 @@ export async function seedInitialData() {
   ];
 
   try {
+    const db = await getPrisma();
     for (const item of initialArtifacts) {
-      await prisma.artifact.upsert({
+      await db.artifact.upsert({
         where: { deploymentId: item.id },
         update: {},
         create: {

@@ -4,6 +4,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -12,8 +13,8 @@ datasource db {
 }
 
 model Artifact {
-  id           String   @id @default(uuid())
-  deploymentId String   @unique
+  id           String     @id @default(uuid())
+  deploymentId String     @unique
   name         String
   series       String
   category     String
@@ -21,18 +22,46 @@ model Artifact {
   status       String
   scale        String
   material     String
-  highlights   String   @default("")
-  imageUrls    String   @default("")
-  condition    String   @default("MISB")
-  manufacturer String   @default("Unknown")
-  inventory    Int      @default(1)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  highlights   String     @default("")
+  imageUrls    String     @default("")
+  condition    String     @default("MISB")
+  manufacturer String     @default("Unknown")
+  inventory    Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  wishlist     Wishlist[]
 }
 
 model SiteSetting {
   key   String @id
   value String
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  phone        String     @default("")
+  address      String     @default("")
+  city         String     @default("")
+  state        String     @default("")
+  zip          String     @default("")
+  country      String     @default("MALAYSIA")
+  createdAt    DateTime   @default(now())
+  orders       Order[]
+  wishlist     Wishlist[]
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artifactId String
+  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, artifactId])
 }
 
 model Order {
@@ -49,8 +78,10 @@ model Order {
   subtotal        Float
   shipping        Float
   total           Float
-  status          String      @default("PENDING") // PENDING, PAID, FAILED, SHIPPED, COMPLETED, CANCELLED
+  status          String      @default("PENDING")
   transactionId   String?
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

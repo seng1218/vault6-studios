@@ -28,7 +28,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative bg-background border-t border-foreground/5 pt-32 pb-12 px-6 md:px-12 z-20">
+    <footer className="relative bg-background border-t border-foreground/5 pt-12 md:pt-32 pb-12 px-6 md:px-12 z-20">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-16 md:gap-8 mb-24">
           

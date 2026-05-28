@@ -103,7 +103,6 @@ export async function POST(req: NextRequest) {
         bill_desc: `Order ${orderNumber}`,
         country: fiuuCountry,
         cur: "MYR",
-        logo: `${SITE_URL}/logo.png`,
         returnurl: `${SITE_URL}/api/payment/return`,
         callbackurl: `${SITE_URL}/api/payment/callback`,
         vcode,

@@ -8,17 +8,23 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
-
+    
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 0.9,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
       smoothWheel: true,
-      touchMultiplier: 2,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.8,
     });
 
-    lenis.on("scroll", () => ScrollTrigger.update());
+    lenis.on("scroll", () => {
+      ScrollTrigger.update();
+    });
 
-    const ticker = (time: number) => lenis.raf(time * 1000);
+    const ticker = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    
     gsap.ticker.add(ticker);
     gsap.ticker.lagSmoothing(0);
 

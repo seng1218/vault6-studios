@@ -1,13 +1,13 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function getSettings() {
   try {
-    const settings = await prisma.siteSetting.findMany();
-    // Convert to a simple key-value object for easier frontend use
-    const settingsObj = settings.reduce((acc: any, curr) => {
+    const db = await getPrisma();
+    const settings = await db.siteSetting.findMany();
+    const settingsObj = settings.reduce((acc: any, curr: { key: string; value: string }) => {
       acc[curr.key] = curr.value;
       return acc;
     }, {});
@@ -20,17 +20,17 @@ export async function getSettings() {
 
 export async function updateSetting(key: string, value: string) {
   try {
-    await prisma.siteSetting.upsert({
+    const db = await getPrisma();
+    await db.siteSetting.upsert({
       where: { key },
       update: { value },
       create: { key, value },
     });
-    revalidatePath("/", "layout");
-    revalidatePath("/admin");
+    try { revalidatePath("/", "layout"); revalidatePath("/admin"); } catch {}
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database Error:", error);
-    return { success: false, error: "Failed to update setting." };
+    return { success: false, error: error?.message || "Failed to update setting." };
   }
 }
 
@@ -43,8 +43,9 @@ export async function seedDefaultSettings() {
   ];
 
   try {
+    const db = await getPrisma();
     for (const item of defaults) {
-      await prisma.siteSetting.upsert({
+      await db.siteSetting.upsert({
         where: { key: item.key },
         update: {},
         create: item,

@@ -56,8 +56,42 @@ CREATE TABLE "OrderItem" (
     CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "phone" TEXT NOT NULL DEFAULT '',
+    "address" TEXT NOT NULL DEFAULT '',
+    "city" TEXT NOT NULL DEFAULT '',
+    "state" TEXT NOT NULL DEFAULT '',
+    "zip" TEXT NOT NULL DEFAULT '',
+    "country" TEXT NOT NULL DEFAULT 'MALAYSIA',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "Wishlist" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "artifactId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Wishlist_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Wishlist_artifactId_fkey" FOREIGN KEY ("artifactId") REFERENCES "Artifact" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Add userId to Order (nullable for backwards compat with guest orders)
+ALTER TABLE "Order" ADD COLUMN "userId" TEXT REFERENCES "User"("id");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Artifact_deploymentId_key" ON "Artifact"("deploymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Order_orderNumber_key" ON "Order"("orderNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Wishlist_userId_artifactId_key" ON "Wishlist"("userId", "artifactId");

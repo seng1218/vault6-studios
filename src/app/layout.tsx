@@ -39,6 +39,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* esbuild helper polyfill — OpenNext/reactCompiler can reference __name in RSC boundaries */}
+        <script dangerouslySetInnerHTML={{ __html: 'var __name=(t,v)=>Object.defineProperty(t,"name",{value:v,configurable:true});' }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300`}
         suppressHydrationWarning

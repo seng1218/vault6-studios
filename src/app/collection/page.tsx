@@ -35,10 +35,9 @@ export default function CollectionPage() {
       } catch (error) {
         console.error("Failed to fetch artifacts:", error);
       } finally {
-        // Artificial delay for cinematic effect
         setTimeout(() => {
           setLoading(false);
-        }, 1200);
+        }, 500);
       }
     };
     loadData();
@@ -224,18 +223,17 @@ export default function CollectionPage() {
                 {filteredArtifacts.map((item, i) => (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ 
-                      duration: 0.5, 
-                      delay: 0.5 + (i * 0.08),
-                      ease: [0.22, 1, 0.36, 1] 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.05 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: i * 0.04,
+                      ease: [0.22, 1, 0.36, 1]
                     }}
-                    whileHover={{ 
-                      y: -10,
-                      rotateX: 2,
-                      rotateY: 2,
-                      transition: { duration: 0.3 }
+                    whileHover={{
+                      y: -6,
+                      transition: { duration: 0.2 }
                     }}
                     onMouseEnter={() => {
                       setHoveredCardIndex(i);

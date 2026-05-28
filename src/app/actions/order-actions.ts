@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function createOrder(orderData: {
@@ -22,9 +22,10 @@ export async function createOrder(orderData: {
   }[];
 }) {
   try {
+    const db = await getPrisma();
     const orderNumber = `V6-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-    const order = await prisma.order.create({
+    const order = await db.order.create({
       data: {
         orderNumber,
         customerName: orderData.customerName,
@@ -37,7 +38,7 @@ export async function createOrder(orderData: {
         subtotal: orderData.subtotal,
         shipping: orderData.shipping,
         total: orderData.total,
-        status: "PAID", // Assuming payment is "authorized" for this mock implementation
+        status: "PAID",
         items: {
           create: orderData.items.map((item) => ({
             artifactId: item.artifactId,
@@ -62,7 +63,8 @@ export async function createOrder(orderData: {
 
 export async function fetchOrders() {
   try {
-    const orders = await prisma.order.findMany({
+    const db = await getPrisma();
+    const orders = await db.order.findMany({
       include: { items: true },
       orderBy: { createdAt: "desc" },
     });

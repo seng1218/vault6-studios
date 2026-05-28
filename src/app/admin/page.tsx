@@ -5,9 +5,9 @@ import { Header } from "@/components/header";
 import { fetchArtifacts, createArtifact, updateArtifact, deleteArtifact, seedInitialData } from "@/app/actions/artifact-actions";
 import { getSettings, updateSetting, seedDefaultSettings } from "@/app/actions/settings-actions";
 import { fetchOrders } from "@/app/actions/order-actions";
-import { verifyOmniKey, checkAdminAuth, logoutAdmin } from "@/app/actions/auth-actions";
+import { verifyOmniKey, checkAdminAuth, logoutAdmin, isTOTPConfigured, setupTOTP, disableTOTP } from "@/app/actions/auth-actions";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, RefreshCcw, Database, AlertCircle, CheckCircle2, Edit2, X, Settings2, Package, Save, Users, Shield, Lock, Key, LogOut, ShoppingCart, Eye } from "lucide-react";
+import { Plus, Trash2, RefreshCcw, Database, AlertCircle, CheckCircle2, Edit2, X, Settings2, Package, Save, Users, Shield, Lock, Key, LogOut, ShoppingCart, Eye, Smartphone, ShieldCheck, ShieldOff } from "lucide-react";
 import { useSettings } from "@/components/settings-provider";
 
 export default function AdminPage() {
@@ -25,7 +25,13 @@ export default function AdminPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  
+
+  // TOTP state
+  const [totpRequired, setTotpRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [totpConfigured, setTotpConfigured] = useState(false);
+  const [totpSetupInfo, setTotpSetupInfo] = useState<{ secret: string; uri: string } | null>(null);
+
   // Mock Members State
   const [members, setMembers] = useState([
     { id: "V6-USR-001", name: "J. Doe", email: "j.doe@proton.me", clearance: "OMNI", status: "ACTIVE" },
@@ -36,11 +42,11 @@ export default function AdminPage() {
 
   // Artifact Form State
   const [artifactForm, setArtifactForm] = useState({
-    deploymentId: "",
+    deploymentId: "V6-",
     name: "",
     series: "ORIGINS",
     category: "HEAD SCULPT",
-    price: "$",
+    price: "RM ",
     status: "AVAILABLE",
     scale: "1/6",
     material: "RESIN",
@@ -60,10 +66,13 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
-    const res = await verifyOmniKey(accessKey);
+    const res = await verifyOmniKey(accessKey, totpRequired ? totpCode : undefined);
     if (res.success) {
       setIsAuthorized(true);
       loadData();
+    } else if (res.requireTOTP) {
+      setTotpRequired(true);
+      setTotpCode("");
     } else {
       setAuthError(res.error || "INVALID KEY");
     }
@@ -75,15 +84,31 @@ export default function AdminPage() {
     setArtifacts([]);
   };
 
+  const handleSetupTOTP = async () => {
+    const info = await setupTOTP();
+    setTotpSetupInfo(info);
+    setTotpConfigured(true);
+  };
+
+  const handleDisableTOTP = async () => {
+    if (!confirm("Disable authenticator? Admin login will only require the OMNI-KEY.")) return;
+    await disableTOTP();
+    setTotpConfigured(false);
+    setTotpSetupInfo(null);
+    setStatus({ type: 'success', msg: "Authenticator disabled." });
+  };
+
   const loadData = async () => {
     setLoading(true);
     setDbError(null);
-    const [artRes, setRes, ordRes] = await Promise.all([
+    const [artRes, setRes, ordRes, totpEnabled] = await Promise.all([
       fetchArtifacts(),
       getSettings(),
-      fetchOrders()
+      fetchOrders(),
+      isTOTPConfigured()
     ]);
 
+    setTotpConfigured(totpEnabled);
     if (artRes.success) setArtifacts(artRes.data || []);
     if (setRes.success) setSiteSettings(setRes.data || {});
     if (ordRes.success) setOrders(ordRes.data || []);
@@ -132,11 +157,11 @@ export default function AdminPage() {
     setIsAdding(false);
     setEditingId(null);
     setArtifactForm({
-      deploymentId: "",
+      deploymentId: "V6-",
       name: "",
       series: "ORIGINS",
       category: "HEAD SCULPT",
-      price: "$",
+      price: "RM ",
       status: "AVAILABLE",
       scale: "1/6",
       material: "RESIN",
@@ -187,11 +212,11 @@ export default function AdminPage() {
 
     if (res.success) {
       setStatus({ type: 'success', msg: editingId ? "Artifact reconfigured." : "New artifact secured." });
-      refreshSettings(); // Sync global state
+      refreshSettings();
       resetArtifactForm();
       loadData();
     } else {
-      setStatus({ type: 'error', msg: "Deployment failed." });
+      setStatus({ type: 'error', msg: res.error || "Deployment failed." });
     }
   };
 
@@ -280,18 +305,48 @@ export default function AdminPage() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
-            <div className="relative">
-              <Key className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20" size={20} />
-              <input 
-                type="password" 
-                value={accessKey}
-                onChange={(e) => setAccessKey(e.target.value)}
-                placeholder="ENTER OMNI-KEY"
-                className="w-full bg-background border border-foreground/10 rounded-2xl py-6 pl-16 pr-6 font-black tracking-[0.5em] focus:border-v6-accent focus:outline-none transition-all"
-              />
-            </div>
+            {!totpRequired ? (
+              <div className="relative">
+                <Key className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20" size={20} />
+                <input
+                  type="password"
+                  value={accessKey}
+                  onChange={(e) => setAccessKey(e.target.value)}
+                  placeholder="ENTER OMNI-KEY"
+                  className="w-full bg-background border border-foreground/10 rounded-2xl py-6 pl-16 pr-6 font-black tracking-[0.5em] focus:border-v6-accent focus:outline-none transition-all"
+                />
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
+              >
+                <div className="relative">
+                  <Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20" size={20} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoFocus
+                    value={totpCode}
+                    onChange={e => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="000000"
+                    className="w-full bg-background border border-v6-accent/40 rounded-2xl py-6 pl-16 pr-6 font-black tracking-[1em] text-center focus:border-v6-accent focus:outline-none transition-all text-2xl"
+                  />
+                </div>
+                <p className="text-[8px] opacity-40 text-center uppercase tracking-widest">Enter 6-digit code from Microsoft Authenticator</p>
+                <button
+                  type="button"
+                  onClick={() => { setTotpRequired(false); setTotpCode(""); setAuthError(""); }}
+                  className="w-full text-[9px] font-black uppercase tracking-widest opacity-30 hover:opacity-70 transition-opacity"
+                >
+                  ← Back to OMNI-KEY
+                </button>
+              </motion.div>
+            )}
             <button type="submit" className="w-full bg-v6-accent text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.4em] hover:scale-[1.02] transition-all shadow-xl shadow-v6-accent/30">
-              VERIFY CLEARANCE
+              {totpRequired ? "VERIFY CODE" : "VERIFY CLEARANCE"}
             </button>
           </form>
 
@@ -444,12 +499,16 @@ export default function AdminPage() {
                        <form onSubmit={handleArtifactSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-2">
                              <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Deployment ID</label>
-                             <input 
+                             <input
                                 required
                                 value={artifactForm.deploymentId}
-                                onChange={e => setArtifactForm({...artifactForm, deploymentId: e.target.value.toUpperCase()})}
-                                placeholder="e.g. V6-00X" 
-                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase" 
+                                onChange={e => {
+                                  const val = e.target.value.toUpperCase();
+                                  if (!val.startsWith("V6-")) return;
+                                  setArtifactForm({...artifactForm, deploymentId: val});
+                                }}
+                                placeholder="V6-001"
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
                              />
                           </div>
                           <div className="space-y-2">
@@ -464,23 +523,34 @@ export default function AdminPage() {
                           </div>
                           <div className="space-y-2">
                              <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Series</label>
-                             <select 
+                             <input
+                                list="series-suggestions"
                                 value={artifactForm.series}
-                                onChange={e => setArtifactForm({...artifactForm, series: e.target.value})}
+                                onChange={e => setArtifactForm({...artifactForm, series: e.target.value.toUpperCase()})}
+                                placeholder="e.g. ORIGINS"
                                 className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
-                             >
-                                <option>ORIGINS</option>
-                                <option>NEO-NOIR</option>
-                                <option>LEGENDS</option>
-                                <option>COLLABS</option>
-                             </select>
+                             />
+                             <datalist id="series-suggestions">
+                                <option value="ORIGINS" />
+                                <option value="NEO-NOIR" />
+                                <option value="LEGENDS" />
+                                <option value="COLLABS" />
+                             </datalist>
                           </div>
                           <div className="space-y-2">
-                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Price Point</label>
-                             <input 
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Price Point (RM)</label>
+                             <input
                                 value={artifactForm.price}
-                                onChange={e => setArtifactForm({...artifactForm, price: e.target.value})}
-                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase" 
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  if (!val.startsWith("RM")) {
+                                    setArtifactForm({...artifactForm, price: "RM "});
+                                    return;
+                                  }
+                                  setArtifactForm({...artifactForm, price: val});
+                                }}
+                                placeholder="RM 150"
+                                className="w-full bg-background border border-foreground/10 rounded-2xl py-4 px-6 font-black tracking-widest focus:border-v6-accent focus:outline-none uppercase"
                              />
                           </div>
                           <div className="space-y-2">
@@ -579,7 +649,12 @@ export default function AdminPage() {
                              />
                           </div>
                           <div className="md:col-span-2 space-y-4">
-                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Photo Options (Upload Images)</label>
+                             <div className="flex items-center justify-between ml-4 mr-4">
+                               <label className="text-[8px] font-black opacity-40 uppercase tracking-widest">Photo Options (Upload Images)</label>
+                               <span className="text-[8px] font-black tracking-widest font-mono" style={{ opacity: artifactForm.imageUrls ? 1 : 0.3 }}>
+                                 {artifactForm.imageUrls ? artifactForm.imageUrls.split('\n').filter(Boolean).length : 0} PHOTO{artifactForm.imageUrls && artifactForm.imageUrls.split('\n').filter(Boolean).length !== 1 ? 'S' : ''} UPLOADED
+                               </span>
+                             </div>
                              
                              {/* Preview Gallery */}
                              {artifactForm.imageUrls && (
@@ -824,6 +899,64 @@ export default function AdminPage() {
                     <RefreshCcw size={14} />
                     Reset to Defaults
                   </button>
+               </div>
+
+               {/* TOTP Security Section */}
+               <div className="bg-foreground/[0.02] border border-foreground/5 rounded-[2rem] p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${totpConfigured ? 'bg-green-500/10' : 'bg-foreground/5'}`}>
+                        {totpConfigured ? <ShieldCheck size={20} className="text-green-500" /> : <ShieldOff size={20} className="opacity-30" />}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black uppercase italic tracking-tighter">Two-Factor Authentication</h3>
+                        <p className="text-[8px] font-black opacity-40 uppercase tracking-widest mt-0.5">
+                          {totpConfigured ? "AUTHENTICATOR ACTIVE — Microsoft Authenticator required at login" : "DISABLED — Only OMNI-KEY required"}
+                        </p>
+                      </div>
+                    </div>
+                    {totpConfigured ? (
+                      <button
+                        onClick={handleDisableTOTP}
+                        className="flex items-center gap-2 px-5 py-3 border border-red-500/30 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500/10 transition-all"
+                      >
+                        <ShieldOff size={14} />
+                        Disable
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSetupTOTP}
+                        className="flex items-center gap-2 px-5 py-3 bg-v6-accent/10 border border-v6-accent/20 rounded-xl text-[9px] font-black uppercase tracking-widest v6-accent-text hover:bg-v6-accent hover:text-white transition-all"
+                      >
+                        <Smartphone size={14} />
+                        Enable Authenticator
+                      </button>
+                    )}
+                  </div>
+
+                  <AnimatePresence>
+                    {totpSetupInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="border border-v6-accent/20 rounded-2xl p-6 space-y-4 bg-v6-accent/5"
+                      >
+                        <p className="text-[9px] font-black uppercase tracking-widest v6-accent-text">Setup Instructions</p>
+                        <ol className="text-[10px] opacity-60 space-y-1 list-decimal list-inside font-medium">
+                          <li>Open Microsoft Authenticator → Add account → Other account</li>
+                          <li>Tap "Enter code manually" and use the secret below</li>
+                          <li>Set account name: <span className="font-black">Vault6Admin</span></li>
+                        </ol>
+                        <div className="bg-background rounded-xl p-4 space-y-1">
+                          <p className="text-[8px] opacity-30 uppercase tracking-widest font-black">Secret Key (manual entry)</p>
+                          <p className="font-mono text-sm font-black tracking-[0.2em] break-all">{totpSetupInfo.secret}</p>
+                        </div>
+                        <p className="text-[8px] opacity-40 uppercase tracking-widest">After adding to authenticator, verify by logging out and logging back in with your code.</p>
+                        <button onClick={() => setTotpSetupInfo(null)} className="text-[8px] font-black uppercase tracking-widest opacity-30 hover:opacity-70 transition-opacity">Dismiss</button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

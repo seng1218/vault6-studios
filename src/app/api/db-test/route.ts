@@ -7,7 +7,7 @@ export async function GET() {
   const diagnostics: Record<string, any> = {};
   try {
     diagnostics.step = "getCloudflareContext";
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     diagnostics.hasEnv = !!env;
     diagnostics.hasDB = !!(env as any).DB;
     diagnostics.dbType = typeof (env as any).DB;

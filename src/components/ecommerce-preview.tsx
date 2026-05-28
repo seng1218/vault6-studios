@@ -14,6 +14,7 @@ interface ECommercePreviewProps {
     status: string;
     scale: string;
     material: string;
+    imageUrls?: string;
   };
 }
 
@@ -24,11 +25,21 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
   const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Generate 4 distinct camera angles from optimized product JPG images
+  // Use uploaded images when available; fall back to generated frame sequences
   const images = useMemo(() => {
+    const uploaded = item.imageUrls
+      ? item.imageUrls.split("\n").map(u => u.trim()).filter(Boolean)
+      : [];
+
+    if (uploaded.length > 0) {
+      // Cycle uploaded images to fill 4 slots
+      return [0, 1, 2, 3].map(i => uploaded[i % uploaded.length]);
+    }
+
+    // Fallback: generate 4 distinct camera angles from optimized product JPG images
     const name = (item.name || "").toLowerCase();
     const category = (item.category || "").toLowerCase();
-    
+
     let startIndex = 1;
     if (name.includes("krypton")) {
       startIndex = 1;
@@ -43,7 +54,6 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
     } else if (category.includes("vehicle") || category.includes("car") || name.includes("car")) {
       startIndex = 41;
     } else {
-      // Create a deterministic hash from the artifact ID
       let hash = 0;
       const str = item.id || "";
       for (let i = 0; i < str.length; i++) {
@@ -109,6 +119,7 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
             transition: "transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-in-out",
             ...zoomStyle,
           }}
+          loading="lazy"
           className="max-w-[90%] max-h-[90%] object-contain mix-blend-lighten transition-transform duration-300 will-change-transform"
         />
       </div>

@@ -39,19 +39,32 @@ export function Header() {
     }, 50);
   };
 
+  const [memberName, setMemberName] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/v6_member_name=([^;]+)/);
+    setMemberName(match ? decodeURIComponent(match[1]) : null);
+  }, []);
+
   if (!mounted) return null;
 
-  const navLinks = [
-    { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
-    { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
-    { name: "JOIN US", href: "/join", desc: "Sign up for exclusive access" },
-    { name: "LOGIN", href: "/login", desc: "Access your account" },
-  ];
+  const navLinks = memberName
+    ? [
+        { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
+        { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
+        { name: "MY VAULT", href: "/member", desc: `Welcome back, ${memberName}` },
+      ]
+    : [
+        { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
+        { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
+        { name: "JOIN US", href: "/join", desc: "Sign up for exclusive access" },
+        { name: "LOGIN", href: "/login", desc: "Access your account" },
+      ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-[100] pointer-events-none">
       {/* 1. Main Navigation Bar */}
-      <div className="flex justify-between items-center px-6 py-6 md:px-12 pointer-events-auto">
+      <div className="flex justify-between items-center px-4 py-4 md:px-6 md:py-6 lg:px-12 pointer-events-auto">
         <Link href="/" onClick={() => { playClickSound(); setIsOpen(false); }} onMouseEnter={playHoverSound}>
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -67,26 +80,26 @@ export function Header() {
           </motion.div>
         </Link>
 
-        <div className="flex items-center space-x-2 md:space-x-6 text-foreground z-[110]">
+        <div className="flex items-center space-x-1 md:space-x-6 text-foreground z-[110]">
           {/* Persistent Vault Link */}
           <Link 
             href="/collection" 
             onMouseEnter={playHoverSound}
             onClick={() => { playClickSound(); setIsOpen(false); }}
-            className="flex items-center gap-2 px-6 py-3 border border-foreground/10 rounded-xl hover:bg-v6-accent hover:text-white hover:border-v6-accent transition-all group relative overflow-hidden"
+            className="flex items-center gap-2 p-1.5 md:px-6 md:py-3 border border-foreground/10 rounded-xl hover:bg-v6-accent hover:text-white hover:border-v6-accent transition-all group relative overflow-hidden"
           >
              <div className="absolute inset-y-0 left-0 w-1 bg-white -translate-x-full group-hover:translate-x-0 transition-transform" />
-             <div className="w-1 h-1 bg-v6-accent rounded-full group-hover:bg-white animate-pulse" />
-             <span className="text-[10px] font-black tracking-[0.3em] uppercase">VAULT</span>
+             <div className="w-2 h-2 md:w-1 md:h-1 bg-v6-accent rounded-full group-hover:bg-white animate-pulse" />
+             <span className="hidden md:block text-[10px] font-black tracking-[0.3em] uppercase">VAULT</span>
           </Link>
 
           <button
             onMouseEnter={playHoverSound}
             onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
-            className="flex items-center gap-3 px-6 py-3 border border-foreground/10 rounded-xl hover:bg-foreground/5 transition-all group overflow-hidden relative"
+            className="flex items-center gap-0 md:gap-3 p-1.5 md:px-6 md:py-3 border border-foreground/10 rounded-xl hover:bg-foreground/5 transition-all group overflow-hidden relative"
           >
              <div className="absolute inset-y-0 left-0 w-1 bg-v6-accent -translate-x-full group-hover:translate-x-0 transition-transform" />
-             <span className="text-[10px] font-black tracking-[0.3em] uppercase">
+             <span className="hidden md:inline text-[10px] font-black tracking-[0.3em] uppercase mr-3">
                {isOpen ? "CLOSE" : "MENU"}
              </span>
              <div className="flex flex-col gap-1">
@@ -110,7 +123,7 @@ export function Header() {
             href="/checkout"
             onMouseEnter={playHoverSound}
             onClick={playClickSound}
-            className="p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative"
+            className="p-2 md:p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative flex-shrink-0"
           >
             <ShoppingBag size={18} />
             {totalItems > 0 && (
@@ -120,16 +133,17 @@ export function Header() {
             )}
           </Link>
 
-          <div className="hidden md:flex items-center space-x-3">
-            <button
-              onMouseEnter={playHoverSound}
-              onClick={() => { playClickSound(); setTheme(theme === "dark" ? "light" : "dark"); }}
-              className="p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent hover:border-foreground/10"
-              aria-label="Toggle Theme"
-            >
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+          {/* Theme toggle — all screen sizes */}
+          <button
+            onMouseEnter={playHoverSound}
+            onClick={() => { playClickSound(); setTheme(theme === "dark" ? "light" : "dark"); }}
+            className="p-2 md:p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent hover:border-foreground/10 flex-shrink-0"
+            aria-label="Toggle Theme"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
+          <div className="hidden md:flex items-center space-x-3">
             {/* Sound Mode Toggle */}
             <button
               onMouseEnter={playHoverSound}
