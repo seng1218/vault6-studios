@@ -21,10 +21,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Vault 6 Studios | Waifu & Anime Figures Malaysia",
   description: "Malaysia's dedicated waifu and anime figure store. Every figure hand-inspected before listing. Free shipping on orders RM100+. Pay via FPX, card, or e-wallet.",
-  keywords: ["waifu figures Malaysia", "anime figures Malaysia", "buy waifu figure online Malaysia", "anime collectibles Malaysia", "figure store Malaysia"],
+  keywords: ["waifu figures Malaysia", "anime figures Malaysia", "buy waifu figure online Malaysia", "anime collectibles Malaysia", "figure store Malaysia", "anime figures Singapore", "buy anime figures SG", "authenticated waifu figures Singapore"],
   openGraph: {
-    title: "Vault 6 Studios | Waifu & Anime Figures Malaysia",
-    description: "Hand-inspected waifu and anime figures. Free shipping from RM100. Member loyalty programme for collectors.",
+    title: "Vault 6 Studios | Waifu & Anime Figures Malaysia & Singapore",
+    description: "Hand-inspected waifu and anime figures. Free shipping on qualifying regional orders. Member loyalty programme for collectors.",
     type: "website",
     siteName: "Vault 6 Studios",
     locale: "en_MY",

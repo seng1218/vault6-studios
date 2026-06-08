@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "cf:build": "npx rimraf .open-next && npx opennextjs-cloudflare build",
     "cf:preview": "npm run cf:build && npx wrangler dev",
-    "cf:deploy": "npm run cf:build && npx opennextjs-cloudflare deploy",
+    "cf:deploy": "npm run cf:build && node patch-prisma-wasm.js && npx wrangler deploy",
     "d1:setup": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --output migration.sql",
     "d1:migrate:remote": "wrangler d1 execute vault6-studios-db --remote --file=migration.sql",
     "d1:migrate:local": "wrangler d1 execute vault6-studios-db --local --file=migration.sql"
