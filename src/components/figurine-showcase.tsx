@@ -302,7 +302,7 @@ export function FigurineShowcase() {
                     transition: "transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
                     ...zoomStyle,
                   }}
-                  className="max-w-[90%] max-h-[100%] object-contain mix-blend-lighten pointer-events-none select-none"
+                  className="max-w-[90%] max-h-[100%] object-contain v6-img-blend pointer-events-none select-none"
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center opacity-20 space-y-2">

@@ -38,7 +38,7 @@ function LoginForm() {
   return (
     <div className="flex-1 flex items-center justify-center pt-48 pb-32 px-6">
       <div className="max-w-md w-full">
-        <div className="bg-foreground/[0.02] border border-foreground/10 rounded-[3rem] p-8 md:p-16 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div className="v6-surface border border-foreground/10 rounded-[3rem] p-8 md:p-16 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="absolute -top-32 -left-32 w-64 h-64 bg-v6-accent/10 rounded-full blur-[100px]" />
 
           <div className="relative z-10">

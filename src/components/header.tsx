@@ -16,10 +16,21 @@ export function Header() {
   const [soundMode, setSoundModeState] = React.useState<SoundMode>("minimal");
   const { settings } = useSettings();
   const { totalItems } = useCart();
+  
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
 
   React.useEffect(() => {
     setMounted(true);
     setSoundModeState(getSoundMode());
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({
+        x: (e.clientX / (typeof window !== 'undefined' ? window.innerWidth : 1) - 0.5) * 20,
+        y: (e.clientY / (typeof window !== 'undefined' ? window.innerHeight : 1) - 0.5) * 20,
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const cycleSoundMode = () => {
@@ -52,17 +63,39 @@ export function Header() {
     ? [
         { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
         { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
+        { name: "OPERATIVES", href: "/members", desc: "Connect with the network" },
         { name: "MY VAULT", href: "/member", desc: `Welcome back, ${memberName}` },
       ]
     : [
         { name: "TRACKING", href: "/tracking", desc: "See where your package is" },
         { name: "3D KITS", href: "/kits", desc: "Purchase your garage kits" },
+        { name: "OPERATIVES", href: "/members", desc: "Meet the community" },
         { name: "JOIN US", href: "/join", desc: "Sign up for exclusive access" },
         { name: "LOGIN", href: "/login", desc: "Access your account" },
       ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-[100] pointer-events-none">
+      {/* HUD Telemetry Decoration */}
+      <motion.div 
+        animate={{ x: mousePos.x, y: mousePos.y }}
+        transition={{ type: "spring", damping: 30, stiffness: 200 }}
+        className="absolute top-6 left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-12 font-mono text-[7px] tracking-[0.5em] opacity-20 pointer-events-none uppercase"
+      >
+        <div className="flex items-center gap-2">
+          <span className="v6-accent-text">●</span>
+          <span>LOGISTICS_LINK_ACTIVE</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="v6-accent-text">●</span>
+          <span>LOC: 35.6895° N, 139.6917° E</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="v6-accent-text">●</span>
+          <span>EST_SYNC: STABLE</span>
+        </div>
+      </motion.div>
+
       {/* 1. Main Navigation Bar */}
       <div className="flex justify-between items-center px-4 py-4 md:px-6 md:py-6 lg:px-12 pointer-events-auto">
         <Link href="/" onClick={() => { playClickSound(); setIsOpen(false); }} onMouseEnter={playHoverSound}>
@@ -71,7 +104,7 @@ export function Header() {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col z-[110] cursor-pointer hover:opacity-70 transition-opacity"
           >
-            <div className="text-2xl font-black tracking-tighter text-foreground leading-none">
+            <div className="text-2xl font-black italic tracking-tighter text-foreground leading-none">
               {settings.hero_title} {settings.hero_subtitle}<span className="v6-accent-text">.</span>
             </div>
             <span className="text-[7px] font-black uppercase tracking-[0.4em] v6-accent-text mt-1">
@@ -82,11 +115,11 @@ export function Header() {
 
         <div className="flex items-center space-x-1 md:space-x-6 text-foreground z-[110]">
           {/* Persistent Vault Link */}
-          <Link 
-            href="/collection" 
+          <Link
+            href="/collection"
             onMouseEnter={playHoverSound}
             onClick={() => { playClickSound(); setIsOpen(false); }}
-            className="flex items-center gap-2 p-1.5 md:px-6 md:py-3 border border-foreground/10 rounded-xl hover:bg-v6-accent hover:text-white hover:border-v6-accent transition-all group relative overflow-hidden"
+            className="flex items-center gap-2 p-2 md:px-6 md:py-3 min-h-[44px] min-w-[44px] border border-foreground/10 rounded-xl hover:bg-v6-accent hover:text-white hover:border-v6-accent transition-all group relative overflow-hidden cursor-pointer"
           >
              <div className="absolute inset-y-0 left-0 w-1 bg-white -translate-x-full group-hover:translate-x-0 transition-transform" />
              <div className="w-2 h-2 md:w-1 md:h-1 bg-v6-accent rounded-full group-hover:bg-white animate-pulse" />
@@ -96,7 +129,8 @@ export function Header() {
           <button
             onMouseEnter={playHoverSound}
             onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
-            className="flex items-center gap-0 md:gap-3 p-1.5 md:px-6 md:py-3 border border-foreground/10 rounded-xl hover:bg-foreground/5 transition-all group overflow-hidden relative"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            className="flex items-center gap-0 md:gap-3 p-2 md:px-6 md:py-3 min-h-[44px] min-w-[44px] border border-foreground/10 rounded-xl hover:bg-foreground/5 transition-all group overflow-hidden relative cursor-pointer"
           >
              <div className="absolute inset-y-0 left-0 w-1 bg-v6-accent -translate-x-full group-hover:translate-x-0 transition-transform" />
              <span className="hidden md:inline text-[10px] font-black tracking-[0.3em] uppercase mr-3">
@@ -123,7 +157,8 @@ export function Header() {
             href="/checkout"
             onMouseEnter={playHoverSound}
             onClick={playClickSound}
-            className="p-2 md:p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative flex-shrink-0"
+            aria-label={`Cart, ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
+            className="p-2 md:p-3 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 relative flex-shrink-0 cursor-pointer"
           >
             <ShoppingBag size={18} />
             {totalItems > 0 && (
@@ -136,11 +171,15 @@ export function Header() {
           {/* Theme toggle — all screen sizes */}
           <button
             onMouseEnter={playHoverSound}
-            onClick={() => { playClickSound(); setTheme(theme === "dark" ? "light" : "dark"); }}
-            className="p-2 md:p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent hover:border-foreground/10 flex-shrink-0"
+            onClick={() => {
+              playClickSound();
+              const nextTheme = (theme === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark") : (theme === "dark" ? "light" : "dark"));
+              setTheme(nextTheme);
+            }}
+            className="p-2 md:p-3 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-colors border border-transparent hover:border-foreground/10 flex-shrink-0 cursor-pointer"
             aria-label="Toggle Theme"
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {mounted && (theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           <div className="hidden md:flex items-center space-x-3">
@@ -148,7 +187,7 @@ export function Header() {
             <button
               onMouseEnter={playHoverSound}
               onClick={cycleSoundMode}
-              className="hidden md:flex p-3 rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 items-center gap-2 group relative"
+              className="hidden md:flex p-3 min-h-[44px] rounded-xl hover:bg-foreground/5 transition-all border border-transparent hover:border-foreground/10 items-center gap-2 group relative cursor-pointer"
               aria-label="Cycle Sound Mode"
               title={`Sound Mode: ${soundMode.toUpperCase()}`}
             >
@@ -201,7 +240,7 @@ export function Header() {
                     href={link.href} 
                     onMouseEnter={playHoverSound}
                     onClick={() => { playClickSound(); setIsOpen(false); }}
-                    className="flex flex-col md:flex-row md:items-end gap-2 md:gap-8 hover:v6-accent-text transition-colors relative"
+                    className="flex flex-col md:flex-row md:items-end gap-2 md:gap-8 hover:text-[var(--v6-accent)] transition-colors relative"
                   >
                     <span className="text-[10px] font-black v6-accent-text opacity-50 font-mono tracking-widest">
                       0{i + 1}

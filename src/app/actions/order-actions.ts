@@ -74,3 +74,22 @@ export async function fetchOrders() {
     return { success: false, error: "Failed to fetch orders." };
   }
 }
+
+export async function deleteOrder(id: string) {
+  try {
+    const db = await getPrisma();
+    // Delete items first since cascade might not be set in SQLite/D1 schema
+    await db.orderItem.deleteMany({
+      where: { orderId: id },
+    });
+    await db.order.delete({
+      where: { id },
+    });
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error) {
+    console.error("Database Error:", error);
+    return { success: false, error: "Failed to delete order record." };
+  }
+}
+

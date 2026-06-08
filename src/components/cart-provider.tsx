@@ -14,6 +14,7 @@ type CartContextType = {
   cart: CartItem[];
   addToCart: (item: any) => void;
   removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -23,8 +24,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const initialized = React.useRef(false);
 
-  // Load cart from local storage on mount
+  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem("v6_cart");
     if (savedCart) {
@@ -36,8 +38,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to local storage on change
+  // Persist cart — skip the very first invocation (fires with empty [] before load completes)
   useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
     localStorage.setItem("v6_cart", JSON.stringify(cart));
   }, [cart]);
 
@@ -57,6 +63,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
 
+  const updateQuantity = (id: string, delta: number) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const newQty = Math.max(1, item.quantity + delta);
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      })
+    );
+  };
+
   const clearCart = () => setCart([]);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -67,7 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}>
       {children}
     </CartContext.Provider>
   );

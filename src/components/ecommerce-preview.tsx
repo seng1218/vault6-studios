@@ -19,11 +19,13 @@ interface ECommercePreviewProps {
 }
 
 export function ECommercePreview({ item }: ECommercePreviewProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [frameIndex, setFrameIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isHudActive, setIsHudActive] = useState(false);
   const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const FRAME_COUNT = 24;
 
   // Use uploaded images when available; fall back to generated frame sequences
   const images = useMemo(() => {
@@ -32,11 +34,11 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
       : [];
 
     if (uploaded.length > 0) {
-      // Cycle uploaded images to fill 4 slots
-      return [0, 1, 2, 3].map(i => uploaded[i % uploaded.length]);
+      // Cycle uploaded images to fill FRAME_COUNT slots
+      return Array.from({ length: FRAME_COUNT }).map((_, i) => uploaded[i % uploaded.length]);
     }
 
-    // Fallback: generate 4 distinct camera angles from optimized product JPG images
+    // Fallback: generate 24 distinct camera angles from optimized product JPG images
     const name = (item.name || "").toLowerCase();
     const category = (item.category || "").toLowerCase();
 
@@ -63,14 +65,28 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
     }
 
     const frames = [];
-    for (let i = 0; i < 4; i++) {
-      const frameNum = startIndex + (i * 3);
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const frameNum = startIndex + Math.floor(i * (53 / FRAME_COUNT));
       const normalizedNum = ((frameNum - 1) % 53) + 1;
       const padNum = normalizedNum.toString().padStart(2, '0');
       frames.push(`/frames/motions rem/${padNum}.jpg`);
     }
     return frames;
   }, [item]);
+
+  // Handle drag to rotate
+  const handleDrag = (event: any, info: any) => {
+    const threshold = 10;
+    if (Math.abs(info.offset.x) > threshold) {
+      const direction = info.offset.x > 0 ? -1 : 1;
+      setFrameIndex((prev) => {
+        let next = prev + direction;
+        if (next >= FRAME_COUNT) next = 0;
+        if (next < 0) next = FRAME_COUNT - 1;
+        return next;
+      });
+    }
+  };
 
   // Handle detailed magnifying zoom coordinates
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -85,7 +101,6 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    setActiveIndex(0);
     setZoomStyle({
       transformOrigin: "center center",
     });
@@ -97,8 +112,15 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full h-full bg-black/40 dark:bg-black/90 rounded-[2rem] overflow-hidden flex items-center justify-center border border-foreground/5 group-hover:border-v6-accent/30 transition-all duration-500"
+      className="relative w-full h-full bg-black/20 dark:bg-black/40 rounded-[2rem] overflow-hidden flex items-center justify-center border border-foreground/5 group-hover:border-v6-accent/30 transition-all duration-500 cursor-grab active:cursor-grabbing"
     >
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0}
+        onDrag={handleDrag}
+        className="absolute inset-0 z-20"
+      />
       {/* 1. Cyberpunk Grid & Radar Blueprint Backdrops */}
       {isHudActive && (
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:16px_16px] z-0 pointer-events-none transition-opacity duration-300">
@@ -111,17 +133,24 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
 
       {/* 2. Interactive Product Image with Cursor-following Zoom */}
       <div className="relative w-full h-full flex items-center justify-center p-4 overflow-hidden pointer-events-none select-none z-10">
-        <img
-          src={images[activeIndex]}
-          alt={item.name}
-          style={{
-            transform: isHovered ? "scale(1.15)" : "scale(1)",
-            transition: "transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-in-out",
-            ...zoomStyle,
-          }}
-          loading="lazy"
-          className="max-w-[90%] max-h-[90%] object-contain mix-blend-lighten transition-transform duration-300 will-change-transform"
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={`${item.id}-${frameIndex}`}
+            src={images[frameIndex]}
+            alt={item.name}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+            style={{
+              transform: isHovered ? "scale(1.15)" : "scale(1)",
+              transition: "transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)",
+              ...zoomStyle,
+            }}
+            loading="lazy"
+            className="max-w-[90%] max-h-[90%] object-contain v6-img-blend will-change-transform"
+          />
+        </AnimatePresence>
       </div>
 
       {/* 3. Tech Blueprint HUD Toggle Overlay */}
@@ -171,40 +200,24 @@ export function ECommercePreview({ item }: ECommercePreviewProps) {
               <div>GRID: LOC_A_603</div>
             </div>
             <div className="text-right space-y-0.5">
-              <div>ROT_P: {activeIndex * 90}°</div>
+              <div>ROT_P: {(frameIndex * (360 / FRAME_COUNT)).toFixed(1)}°</div>
               <div>STABILIZATION: 100%</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. Invisible Horizontal Hover Zones (Sensors) */}
-      <div className="absolute inset-0 flex z-30">
-        {[0, 1, 2, 3].map((idx) => (
-          <div
-            key={idx}
-            className="flex-1 h-full cursor-crosshair"
-            onMouseEnter={() => {
-              if (activeIndex !== idx) {
-                setActiveIndex(idx);
-                playHoverSound();
-              }
-            }}
-          />
-        ))}
-      </div>
-
       {/* 6. High-End Indicators at the bottom */}
       <div className="absolute bottom-4 left-0 w-full flex flex-col items-center gap-1 z-20 pointer-events-none">
         <span className="text-[7px] font-mono tracking-widest opacity-25 uppercase">
-          Angle: {activeIndex * 90}°
+          {(frameIndex * (360 / FRAME_COUNT)).toFixed(0)}° // ROT_Y
         </span>
         <div className="flex gap-1.5">
-          {[0, 1, 2, 3].map((idx) => (
+          {Array.from({ length: 12 }).map((_, idx) => (
             <div
               key={idx}
               className={`h-[2px] rounded-full transition-all duration-300 ${
-                activeIndex === idx ? "w-6 bg-v6-accent" : "w-1.5 bg-foreground/20"
+                Math.floor(frameIndex / (FRAME_COUNT/12)) === idx ? "w-6 bg-v6-accent" : "w-1.5 bg-foreground/20"
               }`}
             />
           ))}

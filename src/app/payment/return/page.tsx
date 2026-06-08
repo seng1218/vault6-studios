@@ -5,7 +5,7 @@ import { useEffect, Suspense } from "react";
 import { useCart } from "@/components/cart-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { CheckCircle2, XCircle, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Package } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -35,42 +35,83 @@ function ReturnContent() {
           className="w-full max-w-lg text-center space-y-10"
         >
           {isSuccess ? (
-            <>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
-                className="w-28 h-28 mx-auto bg-green-500/10 text-green-500 rounded-full flex items-center justify-center"
-              >
-                <CheckCircle2 size={56} />
-              </motion.div>
-              <div className="space-y-3">
-                <h1 className="text-5xl font-black italic uppercase tracking-tighter">
-                  Authorized<span className="v6-accent-text">.</span>
-                </h1>
-                <p className="opacity-50 text-sm font-medium leading-relaxed">
-                  Payment confirmed. Your artifacts are secured and scheduled for deployment.
-                </p>
-              </div>
-              <div className="bg-foreground/[0.03] border border-foreground/10 rounded-3xl p-8 space-y-4 text-left">
-                <div>
-                  <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1">Deployment ID</p>
-                  <p className="text-xl font-mono font-black tracking-tighter">{orderId ?? "—"}</p>
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="w-24 h-24 mx-auto bg-green-500/10 text-green-500 rounded-full flex items-center justify-center border border-green-500/20"
+                >
+                  <CheckCircle2 size={48} />
+                </motion.div>
+                <div className="space-y-2">
+                  <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter">
+                    Authorized<span className="v6-accent-text">.</span>
+                  </h1>
+                  <p className="opacity-40 text-[10px] font-black uppercase tracking-[0.4em]">Logistics link confirmed</p>
                 </div>
-                {tranID && (
-                  <div>
-                    <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1">Transaction Reference</p>
-                    <p className="text-sm font-mono opacity-60">{tranID}</p>
-                  </div>
-                )}
               </div>
-              <Link
-                href="/"
-                className="inline-block bg-v6-accent text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-xl shadow-v6-accent/20"
-              >
-                Return to Hub
-              </Link>
-            </>
+
+              <div className="bg-foreground text-background rounded-[3rem] p-10 space-y-8 text-left relative overflow-hidden group shadow-2xl">
+                {/* Laser Scan Animation */}
+                <motion.div
+                  animate={{ top: ["-10%", "110%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute left-0 right-0 h-px bg-background opacity-10 z-0"
+                />
+
+                <div className="space-y-1 relative z-10">
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-background/40">Physical Manifest Summary</p>
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter text-background leading-none">Acquisition Secured</h2>
+                </div>
+
+                <div className="space-y-6 relative z-10">
+                   <div className="grid grid-cols-1 gap-6">
+                      <div className="space-y-1">
+                        <p className="text-[8px] font-black opacity-30 text-background uppercase tracking-widest">Manifest_ID</p>
+                        <p className="text-xl font-mono font-black tracking-widest text-background">{orderId ?? "UNASSIGNED"}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                         <div className="space-y-1">
+                            <p className="text-[8px] font-black opacity-30 text-background uppercase tracking-widest">Network_Reference</p>
+                            <p className="text-sm font-mono text-background/60 truncate">{tranID ?? "EXTERNAL_LINK"}</p>
+                         </div>
+                         <div className="space-y-1">
+                            <p className="text-[8px] font-black opacity-30 text-background uppercase tracking-widest">Deployment_Status</p>
+                            <p className="text-sm font-black text-v6-accent uppercase tracking-widest">SCHEDULED</p>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="pt-8 border-t border-background/10 space-y-4">
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-2xl bg-background/5 border border-background/10 flex items-center justify-center">
+                            <Package size={18} className="text-background opacity-30" />
+                         </div>
+                         <p className="text-[9px] font-bold text-background/50 uppercase tracking-widest leading-relaxed">
+                            Artifacts are being physically retrieved from the vault and secured for deployment.
+                         </p>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10 pt-4">
+                <Link
+                  href={`/tracking?id=${orderId}`}
+                  className="bg-v6-accent text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-xl shadow-v6-accent/20"
+                >
+                  Track Shipment
+                </Link>
+                <Link
+                  href="/"
+                  className="border border-foreground/10 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-foreground/5 transition-all"
+                >
+                  Return to Hub
+                </Link>
+              </div>
+            </div>
           ) : isPending ? (
             <>
               <div className="w-28 h-28 mx-auto bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center">
@@ -85,7 +126,7 @@ function ReturnContent() {
                 </p>
               </div>
               {orderId && (
-                <div className="bg-foreground/[0.03] border border-foreground/10 rounded-3xl p-8">
+                <div className="v6-surface border border-foreground/10 rounded-3xl p-8">
                   <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1">Order Reference</p>
                   <p className="text-xl font-mono font-black tracking-tighter">{orderId}</p>
                 </div>

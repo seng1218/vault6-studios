@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 
@@ -10,12 +10,7 @@ interface MorphRevealProps {
 }
 
 export const MorphReveal: React.FC<MorphRevealProps> = ({ images, isFullPage = false }) => {
-  const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const image1 = images[0] || "/frames/01.png";
   const image2 = images[1] || image1;
@@ -103,66 +98,62 @@ export const MorphReveal: React.FC<MorphRevealProps> = ({ images, isFullPage = f
 
   const content = (
     <div className={`${isFullPage ? "fixed" : "sticky"} top-0 h-screen w-full overflow-hidden flex items-center justify-center`}>
-      {isMounted ? (
-        <div className={`relative w-full h-full ${isFullPage ? "max-w-none max-h-none p-0" : "max-w-7xl max-h-[85vh] aspect-video px-4"} mx-auto`}>
+      <div className={`relative w-full h-full ${isFullPage ? "max-w-none max-h-none p-0" : "max-w-7xl max-h-[85vh] aspect-video px-4"} mx-auto`}>
 
-          {/* Backdrop that fills the space behind the boxes */}
-          <div className={`absolute inset-0 bg-background/40 backdrop-blur-sm ${isFullPage ? "" : "rounded-3xl"} -z-10 border border-foreground/5`} />
+        {/* Backdrop that fills the space behind the boxes */}
+        <div className={`absolute inset-0 bg-background/40 backdrop-blur-sm ${isFullPage ? "" : "rounded-3xl"} -z-10 border border-foreground/5`} />
 
-          {/* Base layer - very faint to guide the eye */}
-          <div className="absolute inset-0 opacity-10 grayscale pointer-events-none">
-            <motion.div className="absolute inset-0" style={{ opacity: opacity1 }}>
-              <Image src={image1} alt="Base 1" fill className="object-cover" priority />
-            </motion.div>
-            <motion.div className="absolute inset-0" style={{ opacity: opacity2 }}>
-              <Image src={image2} alt="Base 2" fill className="object-cover" />
-            </motion.div>
-            <motion.div className="absolute inset-0" style={{ opacity: opacity3 }}>
-              <Image src={image3} alt="Base 3" fill className="object-cover" />
-            </motion.div>
-            <motion.div className="absolute inset-0" style={{ opacity: opacity4 }}>
-              <Image src={image4} alt="Base 4" fill className="object-cover" />
-            </motion.div>
-          </div>
-
-          {/* The Morphing Windows (Revealers) */}
-          {boxes.map((clipPath, index) => (
-            <motion.div
-              key={index}
-              className="absolute inset-0 z-10 will-change-[clip-path,transform]"
-              style={{
-                clipPath,
-                scale: index % 2 === 0 ? boxScale : 1,
-                rotate: index % 2 !== 0 ? boxRotate : 0,
-              }}
-            >
-              <div className="relative w-full h-full overflow-hidden rounded-3xl will-change-transform">
-                {/* The actual image being revealed */}
-                <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity1 }}>
-                  <Image src={image1} alt={`Reveal ${index} Img 1`} fill className="object-contain" priority={index === 0} />
-                </motion.div>
-                <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity2 }}>
-                  <Image src={image2} alt={`Reveal ${index} Img 2`} fill className="object-contain" />
-                </motion.div>
-                <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity3 }}>
-                  <Image src={image3} alt={`Reveal ${index} Img 3`} fill className="object-contain" />
-                </motion.div>
-                <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity4 }}>
-                  <Image src={image4} alt={`Reveal ${index} Img 4`} fill className="object-contain" />
-                </motion.div>
-
-                {/* Glass effect and border to define the "box" */}
-                <div className="absolute inset-0 border-2 border-foreground/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)] pointer-events-none rounded-3xl" />
-
-                {/* Subtle inner glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] to-transparent pointer-events-none" />
-              </div>
-            </motion.div>
-          ))}
+        {/* Base layer - very faint to guide the eye */}
+        <div className="absolute inset-0 opacity-10 grayscale pointer-events-none">
+          <motion.div className="absolute inset-0" style={{ opacity: opacity1 }}>
+            <Image src={image1} alt="Base 1" fill className="object-cover" priority />
+          </motion.div>
+          <motion.div className="absolute inset-0" style={{ opacity: opacity2 }}>
+            <Image src={image2} alt="Base 2" fill className="object-cover" />
+          </motion.div>
+          <motion.div className="absolute inset-0" style={{ opacity: opacity3 }}>
+            <Image src={image3} alt="Base 3" fill className="object-cover" />
+          </motion.div>
+          <motion.div className="absolute inset-0" style={{ opacity: opacity4 }}>
+            <Image src={image4} alt="Base 4" fill className="object-cover" />
+          </motion.div>
         </div>
-      ) : (
-        <div className="h-full w-full bg-background" />
-      )}
+
+        {/* The Morphing Windows (Revealers) */}
+        {boxes.map((clipPath, index) => (
+          <motion.div
+            key={index}
+            className="absolute inset-0 z-10 will-change-[clip-path,transform]"
+            style={{
+              clipPath,
+              scale: index % 2 === 0 ? boxScale : 1,
+              rotate: index % 2 !== 0 ? boxRotate : 0,
+            }}
+          >
+            <div className="relative w-full h-full overflow-hidden rounded-3xl will-change-transform">
+              {/* The actual image being revealed */}
+              <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity1 }}>
+                <Image src={image1} alt={`Reveal ${index} Img 1`} fill className="object-contain" priority={index === 0} />
+              </motion.div>
+              <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity2 }}>
+                <Image src={image2} alt={`Reveal ${index} Img 2`} fill className="object-contain" />
+              </motion.div>
+              <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity3 }}>
+                <Image src={image3} alt={`Reveal ${index} Img 3`} fill className="object-contain" />
+              </motion.div>
+              <motion.div className="absolute inset-0 will-change-opacity" style={{ opacity: opacity4 }}>
+                <Image src={image4} alt={`Reveal ${index} Img 4`} fill className="object-contain" />
+              </motion.div>
+
+              {/* Glass effect and border to define the "box" */}
+              <div className="absolute inset-0 border-2 border-foreground/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)] pointer-events-none rounded-3xl" />
+
+              {/* Subtle inner glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] to-transparent pointer-events-none" />
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 

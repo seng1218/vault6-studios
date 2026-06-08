@@ -154,7 +154,12 @@ export async function getMemberSession() {
     const db = await getPrisma();
     return db.user.findUnique({
       where: { id: parsed.userId },
-      select: { id: true, email: true, name: true, phone: true, address: true, city: true, state: true, zip: true, country: true, createdAt: true },
+      select: { 
+        id: true, email: true, name: true, phone: true, address: true, 
+        city: true, state: true, zip: true, country: true, 
+        isPublicProfile: true, operativeName: true,
+        createdAt: true 
+      },
     });
   } catch {
     return null;
@@ -233,7 +238,8 @@ export async function toggleWishlist(artifactId: string) {
 }
 
 export async function updateMemberProfile(data: {
-  phone: string; address: string; city: string; state: string; zip: string; country: string;
+  phone?: string; address?: string; city?: string; state?: string; zip?: string; country?: string;
+  isPublicProfile?: boolean; operativeName?: string;
 }) {
   try {
     const userId = await getAuthUserId();
@@ -242,9 +248,60 @@ export async function updateMemberProfile(data: {
     const db = await getPrisma();
     await db.user.update({ where: { id: userId }, data });
     revalidatePath("/member");
+    revalidatePath("/members");
     return { success: true };
   } catch (err) {
     console.error("updateMemberProfile error:", err);
     return { success: false, error: "Failed to update profile." };
   }
 }
+
+export async function fetchAllMembers() {
+  try {
+    const db = await getPrisma();
+    const users = await db.user.findMany({
+      where: { isPublicProfile: true },
+      select: {
+        id: true,
+        email: false, // PDPA: Do not leak emails
+        name: true,
+        operativeName: true,
+        createdAt: true,
+        orders: {
+          where: { status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
+          include: { items: true }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    return { success: true, data: users };
+  } catch (err) {
+    console.error("fetchAllMembers error:", err);
+    return { success: false, error: "Failed to fetch operatives." };
+  }
+}
+
+export async function fetchMemberById(id: string) {
+  try {
+    const db = await getPrisma();
+    const user = await db.user.findUnique({
+      where: { id, isPublicProfile: true },
+      select: {
+        id: true,
+        name: true,
+        operativeName: true,
+        createdAt: true,
+        orders: {
+          where: { status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
+          include: { items: true }
+        }
+      }
+    });
+    if (!user) return { success: false, error: "Operative dossier is restricted or not found." };
+    return { success: true, data: user };
+  } catch (err) {
+    console.error("fetchMemberById error:", err);
+    return { success: false, error: "Failed to fetch operative dossier." };
+  }
+}
+

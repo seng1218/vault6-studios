@@ -22,37 +22,48 @@ if (typeof window !== "undefined") {
   };
 }
 
+import { useTheme } from "next-themes";
+
 export function ThemeProvider({
   children,
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
-  // Sync theme-color meta tag for mobile browsers
+  return (
+    <NextThemesProvider {...props}>
+      <ThemeSyncInternal />
+      {children}
+    </NextThemesProvider>
+  );
+}
+
+function ThemeSyncInternal() {
+  const { resolvedTheme } = useTheme();
+
   React.useEffect(() => {
-    const root = window.document.documentElement;
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "class") {
-          const isDark = root.classList.contains("dark");
-          const themeColor = isDark ? "#050505" : "#f8fafc";
-          
-          // Update meta tag
-          let meta = document.querySelector('meta[name="theme-color"]');
-          if (!meta) {
-            meta = document.createElement('meta');
-            meta.setAttribute('name', 'theme-color');
-            document.head.appendChild(meta);
-          }
-          meta.setAttribute('content', themeColor);
-          
-          // Force color-scheme for browser-level UI consistency
-          root.style.colorScheme = isDark ? "dark" : "light";
-        }
-      });
-    });
+    if (!resolvedTheme) return;
+    
+    const isDark = resolvedTheme === "dark";
+    const themeColor = isDark ? "#050505" : "#f8fafc";
+    
+    // 1. Update theme-color meta tag for mobile address bar
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', themeColor);
+    
+    // 2. Update color-scheme style on root for system UI consistency
+    document.documentElement.style.colorScheme = resolvedTheme;
+    
+    // 3. Ensure the class is present (next-themes does this, but we reinforce it)
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [resolvedTheme]);
 
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
-
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return null;
 }

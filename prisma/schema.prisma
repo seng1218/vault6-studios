@@ -48,6 +48,8 @@ model User {
   state        String     @default("")
   zip          String     @default("")
   country      String     @default("MALAYSIA")
+  isPublicProfile Boolean    @default(false)
+  operativeName   String?
   createdAt    DateTime   @default(now())
   orders       Order[]
   wishlist     Wishlist[]

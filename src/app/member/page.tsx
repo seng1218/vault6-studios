@@ -64,6 +64,8 @@ export default async function MemberPage() {
               state: user.state,
               zip: user.zip,
               country: user.country,
+              isPublicProfile: user.isPublicProfile,
+              operativeName: user.operativeName ?? "",
               createdAt: user.createdAt.toISOString(),
             }}
             orders={orders}

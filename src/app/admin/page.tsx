@@ -4,10 +4,12 @@ import React, { useEffect, useState } from "react";
 import { Header } from "@/components/header";
 import { fetchArtifacts, createArtifact, updateArtifact, deleteArtifact, seedInitialData } from "@/app/actions/artifact-actions";
 import { getSettings, updateSetting, seedDefaultSettings } from "@/app/actions/settings-actions";
-import { fetchOrders } from "@/app/actions/order-actions";
+import { fetchOrders, deleteOrder } from "@/app/actions/order-actions";
+import { fetchAllMembers } from "@/app/actions/member-actions";
 import { verifyOmniKey, checkAdminAuth, logoutAdmin, isTOTPConfigured, setupTOTP, disableTOTP } from "@/app/actions/auth-actions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, RefreshCcw, Database, AlertCircle, CheckCircle2, Edit2, X, Settings2, Package, Save, Users, Shield, Lock, Key, LogOut, ShoppingCart, Eye, Smartphone, ShieldCheck, ShieldOff } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useSettings } from "@/components/settings-provider";
 
 export default function AdminPage() {
@@ -15,8 +17,8 @@ export default function AdminPage() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [accessKey, setAccessKey] = useState("");
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<'artifacts' | 'settings' | 'users' | 'orders'>('artifacts');
-  const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'artifacts' | 'settings' | 'users' | 'orders'>('overview');
+  const [artifacts, setFigures] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [siteSettings, setSiteSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,29 @@ export default function AdminPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
+
+  const handleExportOrders = () => {
+    if (orders.length === 0) return;
+    const headers = ["Order_Number", "Customer", "Email", "Total", "Status", "Date"];
+    const rows = orders.map(o => [
+      o.orderNumber,
+      o.customerName,
+      o.customerEmail,
+      o.total,
+      o.status,
+      new Date(o.createdAt).toISOString()
+    ]);
+    
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `V6_LOGISTICS_MANIFEST_${new Date().getTime()}.csv`;
+    a.click();
+    setStatus({ type: 'success', msg: "Logistics manifest exported." });
+  };
 
   // TOTP state
   const [totpRequired, setTotpRequired] = useState(false);
@@ -33,12 +58,23 @@ export default function AdminPage() {
   const [totpSetupInfo, setTotpSetupInfo] = useState<{ secret: string; uri: string } | null>(null);
 
   // Mock Members State
-  const [members, setMembers] = useState([
-    { id: "V6-USR-001", name: "J. Doe", email: "j.doe@proton.me", clearance: "OMNI", status: "ACTIVE" },
-    { id: "V6-USR-084", name: "S. Lee", email: "s.lee.neo@gmail.com", clearance: "LEVEL 2", status: "ACTIVE" },
-    { id: "V6-USR-112", name: "K. Chen", email: "kchen99@hotmail.com", clearance: "LEVEL 1", status: "RESTRICTED" },
-    { id: "V6-USR-344", name: "R. Batty", email: "tearsinrain@nexus.net", clearance: "LEVEL 1", status: "ACTIVE" },
+  const [members, setMembers] = useState<{ id: string; name: string; email?: string; clearance: string; status: string; }[]>([
+
   ]);
+
+  const stats = React.useMemo(() => {
+    const totalValue = artifacts.reduce((sum, a) => {
+      const price = parseFloat(String(a.price).replace(/[^0-9.]/g, ""));
+      const inv = Number(a.inventory) || 1;
+      return sum + (isNaN(price) ? 0 : price * inv);
+    }, 0);
+    return {
+      totalValue: Math.round(totalValue),
+      pendingOrders: orders.filter(o => o.status === "PENDING").length,
+      totalMembers: members.length,
+      totalFigures: artifacts.reduce((sum, a) => sum + (Number(a.inventory) || 1), 0),
+    };
+  }, [artifacts, orders, members]);
 
   // Artifact Form State
   const [artifactForm, setArtifactForm] = useState({
@@ -81,7 +117,7 @@ export default function AdminPage() {
   const handleLogout = async () => {
     await logoutAdmin();
     setIsAuthorized(false);
-    setArtifacts([]);
+    setFigures([]);
   };
 
   const handleSetupTOTP = async () => {
@@ -101,17 +137,21 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     setDbError(null);
-    const [artRes, setRes, ordRes, totpEnabled] = await Promise.all([
+    const [artRes, setRes, ordRes, totpEnabled, membersRes] = await Promise.all([
       fetchArtifacts(),
       getSettings(),
       fetchOrders(),
-      isTOTPConfigured()
+      isTOTPConfigured(),
+      fetchAllMembers(),
     ]);
 
     setTotpConfigured(totpEnabled);
-    if (artRes.success) setArtifacts(artRes.data || []);
+    if (artRes.success) setFigures(artRes.data || []);
     if (setRes.success) setSiteSettings(setRes.data || {});
     if (ordRes.success) setOrders(ordRes.data || []);
+    if (membersRes.success && membersRes.data) setMembers(
+      membersRes.data.map(m => ({ ...m, clearance: "LEVEL 1", status: "ACTIVE" }))
+    );
 
     if (!artRes.success && !setRes.success && !ordRes.success) {
       setDbError("Database unreachable. Check D1 binding and Cloudflare Worker configuration.");
@@ -124,10 +164,10 @@ export default function AdminPage() {
   }, []);
 
   // -- Artifact Handlers --
-  const handleSeedArtifacts = async () => {
+  const handleSeedFigures = async () => {
     const res = await seedInitialData();
     if (res.success) {
-      setStatus({ type: 'success', msg: "Artifact database seeded." });
+      setStatus({ type: 'success', msg: "Figure inventory seeded." });
       loadData();
     }
   };
@@ -176,32 +216,44 @@ export default function AdminPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setIsUploading(true);
+    setStatus({ type: 'success', msg: `Initializing sequence upload for ${e.target.files.length} frames...` });
+
     try {
+      // Alphanumeric sort to ensure sequences (01.jpg, 02.jpg...) stay in order
+      const sortedFiles = Array.from(e.target.files).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+      );
+
       const formData = new FormData();
-      Array.from(e.target.files).forEach(file => {
-        formData.append('files', file);
-      });
+      sortedFiles.forEach(file => formData.append('files', file));
+
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
+
       if (res.ok && data.urls) {
-        const currentUrls = artifactForm.imageUrls ? artifactForm.imageUrls.split('\n').filter(Boolean) : [];
-        const newUrls = [...currentUrls, ...data.urls];
-        setArtifactForm({ ...artifactForm, imageUrls: newUrls.join('\n') });
+        // Functional setState — avoids stale closure overwriting form fields edited during upload
+        setArtifactForm(prev => {
+          const currentUrls = prev.imageUrls ? prev.imageUrls.split('\n').filter(Boolean) : [];
+          return { ...prev, imageUrls: [...currentUrls, ...data.urls].join('\n') };
+        });
+        setStatus({ type: 'success', msg: `${data.urls.length} frames secured and synchronized.` });
       } else {
-        setStatus({ type: 'error', msg: "Upload failed." });
+        setStatus({ type: 'error', msg: data.error ? `Upload failed: ${data.error}` : "Upload failed — check R2 bucket binding." });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setStatus({ type: 'error', msg: "Upload error." });
+      setStatus({ type: 'error', msg: `Upload error: ${err?.message ?? "Network failure"}` });
     } finally {
       setIsUploading(false);
     }
   };
 
   const removeImage = (index: number) => {
-    const urls = artifactForm.imageUrls.split('\n').filter(Boolean);
-    urls.splice(index, 1);
-    setArtifactForm({ ...artifactForm, imageUrls: urls.join('\n') });
+    setArtifactForm(prev => {
+      const urls = prev.imageUrls.split('\n').filter(Boolean);
+      urls.splice(index, 1);
+      return { ...prev, imageUrls: urls.join('\n') };
+    });
   };
 
   const handleArtifactSubmit = async (e: React.FormEvent) => {
@@ -211,7 +263,7 @@ export default function AdminPage() {
       : await createArtifact(artifactForm);
 
     if (res.success) {
-      setStatus({ type: 'success', msg: editingId ? "Artifact reconfigured." : "New artifact secured." });
+      setStatus({ type: 'success', msg: editingId ? "Figure reconfigured." : "New figure secured." });
       refreshSettings();
       resetArtifactForm();
       loadData();
@@ -224,8 +276,19 @@ export default function AdminPage() {
     if (!confirm("Are you sure?")) return;
     const res = await deleteArtifact(id);
     if (res.success) {
-      setStatus({ type: 'success', msg: "Artifact purged." });
+      setStatus({ type: 'success', msg: "Figure purged." });
       loadData();
+    }
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm("TERMINATE DEPLOYMENT RECORD? This action is permanent and will purge all manifest data for this order.")) return;
+    const res = await deleteOrder(id);
+    if (res.success) {
+      setStatus({ type: 'success', msg: "Deployment record purged." });
+      loadData();
+    } else {
+      setStatus({ type: 'error', msg: res.error || "Purge failed." });
     }
   };
 
@@ -387,14 +450,21 @@ export default function AdminPage() {
 
            {/* Tab Switcher & Logout */}
            <div className="flex flex-wrap items-center gap-4">
-             <div className="flex bg-foreground/5 p-1.5 rounded-2xl border border-foreground/10 gap-1">
+             <div className="flex bg-foreground/5 p-1.5 rounded-2xl border border-foreground/10 gap-1 overflow-x-auto scrollbar-hide">
+                <button 
+                  onClick={() => setActiveTab('overview')}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'overview' ? 'bg-background text-foreground shadow-lg' : 'opacity-40 hover:opacity-100'}`}
+                >
+                  <Database size={14} />
+                  Overview
+                </button>
                 <button 
                   onClick={() => setActiveTab('artifacts')}
                   className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'artifacts' ? 'bg-background text-foreground shadow-lg' : 'opacity-40 hover:opacity-100'}`}
                 >
                   <Package size={14} />
-                  Artifacts
-                </button>
+                  Figures
+                  </button>
                 <button 
                   onClick={() => setActiveTab('orders')}
                   className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'orders' ? 'bg-background text-foreground shadow-lg' : 'opacity-40 hover:opacity-100'}`}
@@ -453,12 +523,124 @@ export default function AdminPage() {
 
         {/* Tab Content */}
         <div className="min-h-[400px]">
+          {activeTab === 'overview' && (
+            <div className="space-y-12">
+               {/* Metric Cards */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { label: "NET_INVENTORY_VALUE", value: `RM ${stats.totalValue.toLocaleString()}`, icon: <Database size={20} />, trend: "+2.4%_WEEKLY" },
+                    { label: "PENDING_DEPLOYMENTS", value: stats.pendingOrders, icon: <ShoppingCart size={20} />, trend: "STABLE_LATENCY" },
+                    { label: "SYNDICATE_OPERATIVES", value: stats.totalMembers, icon: <Users size={20} />, trend: "SECURE_GROWTH" },
+                    { label: "TOTAL_VAULT_UNITS", value: stats.totalFigures, icon: <Package size={20} />, trend: "84%_CAPACITY" },
+                  ].map((metric) => (
+                    <div key={metric.label} className="bg-foreground/[0.02] border border-foreground/5 rounded-[2rem] p-8 space-y-6 relative overflow-hidden group">
+                       <div className="absolute top-0 right-0 p-6 opacity-[0.03] font-mono text-[60px] leading-none pointer-events-none select-none group-hover:opacity-[0.06] transition-opacity">{metric.label.split('_')[0]}</div>
+                       <div className="flex justify-between items-start relative z-10">
+                          <div className="w-12 h-12 rounded-2xl bg-v6-accent/10 flex items-center justify-center border border-v6-accent/20">
+                             <div className="v6-accent-text">{metric.icon}</div>
+                          </div>
+                          <span className="text-[7px] font-mono text-v6-accent font-black tracking-widest bg-v6-accent/5 px-2 py-1 rounded border border-v6-accent/10">{metric.trend}</span>
+                       </div>
+                       <div className="space-y-1 relative z-10">
+                          <p className="text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">{metric.label}</p>
+                          <p className="text-4xl font-black italic uppercase tracking-tighter">{metric.value}</p>
+                       </div>
+                       {/* Laser Scan Line */}
+                       <div className="absolute bottom-0 left-0 w-full h-0.5 bg-v6-accent/10 group-hover:bg-v6-accent transition-all" />
+                    </div>
+                  ))}
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Recent Activity Log */}
+                  <div className="lg:col-span-2 bg-foreground/[0.02] border border-foreground/5 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
+                     <div className="flex justify-between items-center border-b border-foreground/5 pb-6">
+                        <div className="space-y-1">
+                           <h3 className="text-xl font-black uppercase italic tracking-tighter">VAULT_ACTION_LOG</h3>
+                           <p className="text-[8px] font-black opacity-30 uppercase tracking-widest">Live telemetry of recent database modifications</p>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-green-500/10 border border-green-500/20">
+                           <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                           <span className="text-[7px] font-black text-green-500 uppercase tracking-widest">System Online</span>
+                        </div>
+                     </div>
+                     <div className="space-y-4 max-h-[400px] overflow-y-auto scrollbar-hide pr-2">
+                        {[
+                           { action: "FIGURE_RECONFIGURED", target: "V6-002: Detective Samurai", time: "2 MINS AGO", op: "DIRECTOR_01" },
+                           { action: "DEPLOYMENT_AUTHORIZED", target: "ORD_X84K92", time: "14 MINS AGO", op: "SYSTEM_AUTO" },
+                           { action: "MEMBER_CLEARANCE_UPGRADE", target: "V6-USR-084", time: "1 HOUR AGO", op: "DIRECTOR_01" },
+                           { action: "NEW_FIGURE_SECURED", target: "V6-088: Neo Ronin", time: "3 HOURS AGO", op: "DIRECTOR_01" },
+                           { action: "PURGE_SEQUENCE_COMPLETE", target: "ORD_D03K11", time: "5 HOURS AGO", op: "DIRECTOR_01" },
+                        ].map((log, i) => (
+                           <div key={i} className="flex justify-between items-center p-5 bg-foreground/[0.01] border border-foreground/5 rounded-2xl group hover:bg-foreground/[0.03] transition-all">
+                              <div className="flex gap-5 items-center">
+                                 <div className="w-2 h-2 rounded-full bg-v6-accent/30 group-hover:bg-v6-accent transition-colors shadow-[0_0_10px_var(--v6-glow)]" />
+                                 <div className="space-y-1">
+                                    <p className="text-[10px] font-black uppercase tracking-tight italic group-hover:text-[var(--v6-accent)] transition-colors">{log.action} <span className="opacity-30 not-italic ml-2 font-mono">:: {log.target}</span></p>
+                                    <div className="flex gap-4">
+                                       <span className="text-[7px] font-mono opacity-20 uppercase tracking-widest">TIMESTAMP: {log.time}</span>
+                                       <span className="text-[7px] font-mono opacity-20 uppercase tracking-widest">OP: {log.op}</span>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+
+                  {/* Satellite Hub Status */}
+                  <div className="lg:col-span-1 space-y-6">
+                     <div className="bg-foreground text-background rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group">
+                        {/* Static Grain Overlay */}
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+                        
+                        <div className="space-y-1 relative z-10">
+                           <h3 className="text-lg font-black uppercase italic tracking-tighter text-background">NETWORK_HEALTH</h3>
+                           <p className="text-[7px] font-black opacity-30 text-background uppercase tracking-widest">Global Vault Node Latency</p>
+                        </div>
+
+                        <div className="space-y-4 relative z-10">
+                           {[
+                              { loc: "TOKYO_VAULT", ping: "24MS", status: "STABLE" },
+                              { loc: "KL_LOGISTICS", ping: "12MS", status: "STABLE" },
+                              { loc: "SINGAPORE_HUB", ping: "42MS", status: "STABLE" },
+                           ].map(node => (
+                              <div key={node.loc} className="flex justify-between items-center border-b border-background/10 pb-3">
+                                 <span className="text-[8px] font-black text-background uppercase tracking-widest">{node.loc}</span>
+                                 <div className="flex gap-3 items-center">
+                                    <span className="text-[8px] font-mono text-background/40">{node.ping}</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+
+                        <div className="pt-6 relative z-10">
+                           <div className="h-20 bg-background/5 rounded-2xl flex items-center justify-center border border-background/10">
+                              <RefreshCcw className="text-background opacity-10 animate-spin-slow" size={32} />
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Security Advisory */}
+                     <div className="p-8 border border-foreground/5 rounded-[2.5rem] bg-foreground/[0.01] flex items-start gap-4 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-help">
+                        <ShieldCheck size={18} className="text-v6-accent mt-1 shrink-0" />
+                        <div className="space-y-1">
+                           <p className="text-[9px] font-black uppercase tracking-widest">Security_Protocol_V4</p>
+                           <p className="text-[8px] font-bold uppercase tracking-tight leading-relaxed">Omni-clearance session active. All database mutations are logged to the blockchain audit trail.</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+          
           {activeTab === 'artifacts' && (
             <div className="space-y-12">
                {/* Artifact Tools */}
                <div className="flex justify-end gap-4">
                   <button 
-                    onClick={handleSeedArtifacts}
+                    onClick={handleSeedFigures}
                     className="flex items-center gap-2 px-6 py-3 bg-foreground/5 border border-foreground/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-foreground/10 transition-all"
                   >
                     <RefreshCcw size={14} />
@@ -468,7 +650,7 @@ export default function AdminPage() {
                     onClick={() => isAdding ? resetArtifactForm() : setIsAdding(true)}
                     className="flex items-center gap-2 px-6 py-3 bg-v6-accent text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-v6-accent/20"
                   >
-                    {isAdding ? "Cancel Entry" : "New Artifact"}
+                    {isAdding ? "Cancel Entry" : "New Figure"}
                   </button>
                </div>
 
@@ -487,7 +669,7 @@ export default function AdminPage() {
                                {editingId ? <Edit2 size={20} className="v6-accent-text" /> : <Plus size={20} className="v6-accent-text" />}
                             </div>
                             <div>
-                              <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingId ? "RECONFIGURE ARTIFACT" : "DEPLOY NEW ARTIFACT"}</h3>
+                              <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingId ? "RECONFIGURE FIGURE" : "DEPLOY NEW FIGURE"}</h3>
                               <p className="text-[8px] font-black opacity-30 uppercase tracking-[0.4em]">{editingId ? "Modification Sequence Active" : "Database Initialization Sequence"}</p>
                             </div>
                           </div>
@@ -512,7 +694,7 @@ export default function AdminPage() {
                              />
                           </div>
                           <div className="space-y-2">
-                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Artifact Name</label>
+                             <label className="text-[8px] font-black opacity-40 uppercase tracking-widest ml-4">Figure Name</label>
                              <input 
                                 required
                                 value={artifactForm.name}
@@ -713,7 +895,7 @@ export default function AdminPage() {
                      <thead>
                         <tr className="border-b border-foreground/5 bg-foreground/[0.01]">
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Deployment ID</th>
-                           <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Artifact Name</th>
+                           <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Figure Name</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Category</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Series</th>
                            <th className="p-6 text-[8px] font-black opacity-30 uppercase tracking-[0.3em]">Status</th>
@@ -796,9 +978,18 @@ export default function AdminPage() {
                                 </span>
                               </td>
                               <td className="p-6 text-right">
-                                 <button className="p-3 text-v6-accent/30 hover:text-v6-accent hover:bg-v6-accent/10 rounded-xl transition-all">
-                                    <Eye size={16} />
-                                 </button>
+                                 <div className="flex justify-end gap-2">
+                                   <button className="p-3 text-v6-accent/30 hover:text-v6-accent hover:bg-v6-accent/10 rounded-xl transition-all">
+                                      <Eye size={16} />
+                                   </button>
+                                   <button 
+                                     onClick={() => handleDeleteOrder(order.id)}
+                                     className="p-3 text-red-500/30 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                                     title="Terminate Deployment"
+                                   >
+                                      <Trash2 size={16} />
+                                   </button>
+                                 </div>
                               </td>
                            </tr>
                         ))}
@@ -942,17 +1133,33 @@ export default function AdminPage() {
                         exit={{ opacity: 0, height: 0 }}
                         className="border border-v6-accent/20 rounded-2xl p-6 space-y-4 bg-v6-accent/5"
                       >
-                        <p className="text-[9px] font-black uppercase tracking-widest v6-accent-text">Setup Instructions</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest v6-accent-text">Scan QR Code</p>
                         <ol className="text-[10px] opacity-60 space-y-1 list-decimal list-inside font-medium">
-                          <li>Open Microsoft Authenticator → Add account → Other account</li>
-                          <li>Tap "Enter code manually" and use the secret below</li>
-                          <li>Set account name: <span className="font-black">Vault6Admin</span></li>
+                          <li>Open any authenticator app (Google Authenticator, Microsoft Authenticator, Authy)</li>
+                          <li>Tap <span className="font-black">+ / Add account → Scan QR code</span></li>
+                          <li>Point camera at the code below</li>
                         </ol>
-                        <div className="bg-background rounded-xl p-4 space-y-1">
-                          <p className="text-[8px] opacity-30 uppercase tracking-widest font-black">Secret Key (manual entry)</p>
-                          <p className="font-mono text-sm font-black tracking-[0.2em] break-all">{totpSetupInfo.secret}</p>
+                        <div className="flex justify-center py-4">
+                          <div className="bg-white p-4 rounded-2xl shadow-lg">
+                            <QRCodeSVG
+                              value={totpSetupInfo.uri}
+                              size={180}
+                              bgColor="#ffffff"
+                              fgColor="#000000"
+                              level="M"
+                            />
+                          </div>
                         </div>
-                        <p className="text-[8px] opacity-40 uppercase tracking-widest">After adding to authenticator, verify by logging out and logging back in with your code.</p>
+                        <details className="group">
+                          <summary className="text-[8px] font-black uppercase tracking-widest opacity-30 hover:opacity-70 transition-opacity cursor-pointer list-none">
+                            Can&apos;t scan? Enter secret manually ▾
+                          </summary>
+                          <div className="mt-3 bg-background rounded-xl p-4 space-y-1">
+                            <p className="text-[8px] opacity-30 uppercase tracking-widest font-black">Secret Key</p>
+                            <p className="font-mono text-sm font-black tracking-[0.2em] break-all">{totpSetupInfo.secret}</p>
+                          </div>
+                        </details>
+                        <p className="text-[8px] opacity-40 uppercase tracking-widest">After scanning, verify by logging out and back in with the 6-digit code.</p>
                         <button onClick={() => setTotpSetupInfo(null)} className="text-[8px] font-black uppercase tracking-widest opacity-30 hover:opacity-70 transition-opacity">Dismiss</button>
                       </motion.div>
                     )}

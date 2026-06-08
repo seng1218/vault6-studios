@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+
+# AI search & citation bots — explicitly allowed so AI engines can cite us
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Training-only crawlers — blocked (citation bots above are still allowed)
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://www.vault6studios.com/sitemap.xml

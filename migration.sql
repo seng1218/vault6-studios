@@ -68,6 +68,8 @@ CREATE TABLE "User" (
     "state" TEXT NOT NULL DEFAULT '',
     "zip" TEXT NOT NULL DEFAULT '',
     "country" TEXT NOT NULL DEFAULT 'MALAYSIA',
+    "isPublicProfile" BOOLEAN NOT NULL DEFAULT false,
+    "operativeName" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

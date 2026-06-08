@@ -4,8 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { InfoPageTemplate } from "@/components/info-page-template";
 
-const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
-  <div className="border-b border-foreground/10 pb-10 mb-10">
+const Section = ({ title, id, children }: { title: string, id?: string, children: React.ReactNode }) => (
+  <div className="border-b border-foreground/10 pb-10 mb-10" id={id}>
     <h2 className="text-xs font-black uppercase tracking-[0.4em] v6-accent-text mb-4">{title}</h2>
     <div className="space-y-4 text-foreground/80 text-sm leading-relaxed">{children}</div>
   </div>
@@ -14,184 +14,137 @@ const Section = ({ title, children }: { title: string, children: React.ReactNode
 export default function ShippingPolicyPage() {
   return (
     <InfoPageTemplate 
-      title="SHIPPING POLICY" 
-      subtitle="Effective: 1 May 2026 · Jurisdiction: Malaysia"
+      title="LOGISTICS PROTOCOL" 
+      subtitle="ASEAN CORRIDOR DEPLOYMENT · REV: 2026.06.A"
       content={
         <>
-          <Section title="1. Delivery Coverage">
+          <Section title="1. Deployment Scope: ASEAN Corridor">
             <p>
-              Vault 6 Studios ships to <strong className="text-foreground">all addresses within Malaysia</strong>, including Peninsular Malaysia, Sabah, and Sarawak. We do not currently offer international shipping.
-            </p>
-            <p>
-              P.O. Box addresses are not accepted as delivery addresses due to the fragile and high-value nature of our products. A physical street address with a valid contact number is required for all orders.
-            </p>
-          </Section>
-
-          <Section title="2. Courier Partners">
-            <p>
-              We ship via the following courier partners. The assigned courier is selected at our discretion based on your delivery zone, parcel weight, and service availability:  
+              Vault 6 Studios operates a high-fidelity logistics network covering the <strong className="text-foreground text-v6-accent">ASEAN Corridor</strong>. We secure and deploy physical artifacts to the following regional nodes:
             </p>
             <ul className="list-disc list-inside space-y-2 text-foreground/60">
-              <li><strong className="text-foreground">J&T Express</strong> — Nationwide coverage, standard parcels</li>
-              <li><strong className="text-foreground">Pos Laju (Poslaju)</strong> — Nationwide coverage including rural zones</li>
-              <li><strong className="text-foreground">NinjaVan</strong> — Peninsular Malaysia, urban delivery</li>
-              <li><strong className="text-foreground">DHL eCommerce</strong> — Premium service for high-value items</li>
-              <li><strong className="text-foreground">Shopee Express / Lalamove</strong> — Supplementary service for certain zones</li>
+              <li><strong className="text-foreground">Malaysia</strong> (Peninsular, Sabah, Sarawak, Labuan)</li>
+              <li><strong className="text-foreground">Singapore</strong> (City-State Wide)</li>
+              <li><strong className="text-foreground">Indonesia</strong> (Java, Sumatra, Bali, and major provinces)</li>
+              <li><strong className="text-foreground">Philippines</strong> (Luzon, Visayas, Mindanao)</li>
+              <li><strong className="text-foreground">Thailand</strong> (Bangkok and nationwide)</li>
+              <li><strong className="text-foreground">Vietnam</strong> (HCMC, Hanoi, and nationwide)</li>
             </ul>
-            <p className="text-foreground/60 text-xs mt-2">
-              We reserve the right to change courier providers at any time without prior notice. Regardless of courier assignment, the service standards in this policy apply in full.
+            <p className="text-foreground/60 text-xs italic">
+              Note: Remote or rural sectors may require extended transit times and additional logistics surcharges.
             </p>
           </Section>
 
-          <Section title="3. Processing Time">
+          <Section title="2. The Inspection Protocol (Pre-Dispatch)">
             <p>
-              Processing time is the period between order payment confirmation and the parcel being handed to the courier.
+              Every artifact undergoes a multi-stage **Physical Verification Protocol** before it is cleared for departure.
+            </p>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong className="text-foreground">Box Integrity Scan:</strong> Visual inspection for factory seal (MISB) and corner integrity.</li>
+              <li><strong className="text-foreground">Authenticity Check:</strong> Verification of manufacturer holographic seals and registration markers.</li>
+              <li><strong className="text-foreground">Photo Documentation:</strong> High-resolution telemetry of the item is captured for our records prior to sealing the shipping carton.</li>
+            </ul>
+          </Section>
+
+          <Section title="3. Processing & Handling">
+            <p>
+              Processing occurs Monday through Friday, 0900 – 1700 [GMT+8].
             </p>
             <ul className="list-disc list-inside space-y-2">
               <li>
-                <strong className="text-foreground">Ready Stock items:</strong> Packed and dispatched within <strong className="text-foreground">1–2 business days</strong> of payment confirmation.
+                <strong className="text-foreground">Standard Hand-off:</strong> Orders are typically cleared for courier pickup within <strong className="text-foreground">1–2 business days</strong> of payment confirmation.
               </li>
               <li>
-                <strong className="text-foreground">Pre-Order items:</strong> Dispatched upon arrival from the manufacturer/distributor. See Section 7 of our <Link href="/terms" className="text-v6-accent hover:text-foreground transition-colors">Terms & Conditions</Link> for pre-order delivery timelines.
+                <strong className="text-foreground">Pre-Order Deployment:</strong> Artifacts under pre-order status are shipped within 48 hours of arrival at the Vault 6 Command Centre.
               </li>
             </ul>
-            <p className="text-foreground/60 text-xs mt-2">
-              Business days are Monday to Friday, excluding Malaysian public holidays (Federal and Selangor). Orders placed after 3:00 PM on a business day or on weekends/public holidays will begin processing on the next business day.
-            </p>
           </Section>
 
-          <Section title="4. Estimated Delivery Timeframes">
+          <Section title="4. Regional Customs & De Minimis (Tax Framework)">
             <p>
-              The following are estimated delivery windows after dispatch. These are guidelines provided by the respective couriers and are not guaranteed:
+              International shipments are subject to local customs regulations. The buyer (Importer of Record) is responsible for all duties, taxes, and brokerage fees.
             </p>
-
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-sm border-collapse">
+            
+            <div className="overflow-x-auto mt-6">
+              <table className="w-full text-[10px] border-collapse bg-foreground/[0.02] border border-foreground/10">
                 <thead>
-                  <tr className="border-b border-foreground/10">
-                    <th className="text-left text-foreground font-black text-[10px] uppercase tracking-widest py-3 pr-6">Region</th>
-                    <th className="text-left text-foreground font-black text-[10px] uppercase tracking-widest py-3 pr-6">Estimated Delivery</th>
+                  <tr className="border-b border-foreground/10 text-v6-accent">
+                    <th className="text-left py-4 px-4 font-black uppercase tracking-widest">Sector</th>
+                    <th className="text-left py-4 px-4 font-black uppercase tracking-widest">De Minimis (Tax-Free)</th>
+                    <th className="text-left py-4 px-4 font-black uppercase tracking-widest">VAT / Duty Notes</th>
                   </tr>
                 </thead>
-                <tbody className="space-y-2">
+                <tbody className="opacity-80">
                   <tr className="border-b border-foreground/5">
-                    <td className="py-3 pr-6 text-foreground/60">Peninsular Malaysia (major cities)</td>
-                    <td className="py-3 text-foreground font-bold">1–3 business days</td>
+                    <td className="py-4 px-4 font-bold">SINGAPORE</td>
+                    <td className="py-4 px-4 text-foreground">SGD 400.00</td>
+                    <td className="py-4 px-4">Subject to 9% GST if above threshold.</td>
                   </tr>
                   <tr className="border-b border-foreground/5">
-                    <td className="py-3 pr-6 text-foreground/60">Peninsular Malaysia (suburban / rural)</td>
-                    <td className="py-3 text-foreground font-bold">2–5 business days</td>
+                    <td className="py-4 px-4 font-bold">INDONESIA</td>
+                    <td className="py-4 px-4 text-foreground">USD 3.00</td>
+                    <td className="py-4 px-4">Strict Threshold. 7.5% Duty + 11% VAT applies to almost all imports.</td>
                   </tr>
                   <tr className="border-b border-foreground/5">
-                    <td className="py-3 pr-6 text-foreground/60">Sabah & Sarawak (urban)</td>
-                    <td className="py-3 text-foreground font-bold">3–7 business days</td>
+                    <td className="py-4 px-4 font-bold">PHILIPPINES</td>
+                    <td className="py-4 px-4 text-foreground">PHP 10,000.00</td>
+                    <td className="py-4 px-4">Generous limit for collectors. 12% VAT applies if above.</td>
                   </tr>
                   <tr className="border-b border-foreground/5">
-                    <td className="py-3 pr-6 text-foreground/60">Sabah & Sarawak (interior / rural)</td>
-                    <td className="py-3 text-foreground font-bold">5–10 business days</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 pr-6 text-foreground/60">Labuan</td>
-                    <td className="py-3 text-foreground font-bold">3–7 business days</td>
+                    <td className="py-4 px-4 font-bold">THAILAND</td>
+                    <td className="py-4 px-4 text-foreground">THB 1,500.00</td>
+                    <td className="py-4 px-4">Duty-free under 1.5k, but 7% VAT applies to ALL imports.</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-
-            <p className="text-foreground/60 text-xs mt-4">
-              Delivery timeframes may be extended during peak periods (Hari Raya Aidilfitri, Chinese New Year, Deepavali, year-end festive season) and may be affected by adverse weather, natural events, or nationwide disruptions. We will communicate known delays proactively.
+            <p className="text-foreground/40 text-[9px] mt-4 uppercase tracking-widest">
+              VAT/GST and Duty calculations are handled by the receiving customs authority. Failure to pay may result in artifact destruction or return-to-sender at the buyer's expense.
             </p>
           </Section>
 
-          <Section title="5. Shipping Rates">
+          <Section title="5. Strategic Packaging Protocol">
             <p>
-              Shipping fees are calculated at checkout based on parcel weight, dimensions, and delivery zone. The applicable rate will be clearly displayed before you confirm payment.
-            </p>
-            <p>
-              For select promotions, free shipping may be offered above a qualifying order value. Promotional shipping terms are stated on the relevant campaign page or announcement banner.
-            </p>
-            <p className="text-foreground/60 text-xs mt-2">
-              We do not add mark-ups to courier rates. The fee charged reflects the actual shipping cost. Shipping fees are non-refundable except where the return is due to our error, as detailed in our <Link href="/return-policy" className="text-v6-accent hover:text-foreground transition-colors">Return & Refund Policy</Link>.
-            </p>
-          </Section>
-
-          <Section title="6. Packaging Standards">
-            <p>
-              We take packaging seriously. All collectible figures are packed to minimise the risk of damage in transit:
+              To ensure the structural integrity of every figure box, we use the **Vault 6 Multi-Layer Standard**:
             </p>
             <ul className="list-disc list-inside space-y-2">
-              <li><strong className="text-foreground">Primary protection:</strong> Figure boxes are individually wrapped in bubble wrap (minimum 2 layers) and surrounded by foam padding or kraft paper fill.</li>
-              <li><strong className="text-foreground">Outer carton:</strong> Parcels are shipped in a corrugated cardboard outer box sized appropriately to prevent movement. Oversized figures may require custom-cut foam inserts.</li>
-              <li><strong className="text-foreground">MISB / Sealed items:</strong> Factory-sealed boxes are never opened for repacking. The sealed item is nested within the outer shipping carton with adequate cushioning.</li>
-              <li><strong className="text-foreground">Multiple items:</strong> Orders containing multiple figures are individually padded and secured within a single outer carton where weight permits, or shipped in separate parcels.</li>
-              <li><strong className="text-foreground">Fragile labelling:</strong> All parcels are labelled with “FRAGILE — THIS SIDE UP” markings.</li>
-            </ul>
-            <p className="text-foreground/60 text-xs mt-2">
-              Despite our packaging standards, courier handling may cause damage. We strongly recommend examining your parcel for visible external damage before signing for delivery, and noting any damage with the delivery agent.
-            </p>
-          </Section>
-
-          <Section title="7. Tracking">
-            <p>
-              A tracking number will be sent to you via <strong className="text-foreground">WhatsApp</strong> (or email, where applicable) within <strong className="text-foreground">24 hours</strong> of dispatch. You may use this number to track your parcel directly on the courier's website.
-            </p>
-            <p>
-              If you have not received a tracking number within 3 business days of payment confirmation (for Ready Stock items), please contact us immediately.
-            </p>
-          </Section>
-
-          <Section title="8. Damaged in Transit">
-            <p>
-              If your item arrives visibly damaged due to transit mishandling:
-            </p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Photograph the <strong className="text-foreground">outer packaging</strong> (before opening), the <strong className="text-foreground">inner packaging</strong>, and the <strong className="text-foreground">damaged item</strong> immediately.</li>
-              <li>Contact us via WhatsApp within <strong className="text-foreground">24 hours</strong> of delivery with your order reference and the photographs.</li>
-              <li>We will lodge a damage claim with the courier on your behalf. Most couriers require claim submission within 7 days of delivery.</li>
-              <li>Pending the outcome of the courier investigation, we will offer a replacement (subject to stock availability) or a full refund.</li>
-            </ol>
-            <p className="text-foreground/60 text-xs mt-2">
-              Damage claims require photographic evidence. Claims submitted without photos or after the 24-hour window may be rejected by the courier, limiting our ability to compensate.
-            </p>
-          </Section>
-
-          <Section title="9. Lost Parcels">
-            <p>
-              A parcel is considered lost if it has not been delivered within <strong className="text-foreground">14 calendar days</strong> beyond the estimated delivery window and the tracking information shows no movement for 7 or more consecutive days.
-            </p>
-            <p>
-              To report a potential lost parcel:
-            </p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Contact us with your order reference and tracking number.</li>
-              <li>We will file a loss investigation with the courier. Investigations typically take 7–14 business days.</li>
-              <li>Upon confirmation of loss, we will offer a replacement (subject to stock) or a full refund of the item value plus shipping fees.</li>
-            </ol>
-            <p className="text-foreground/60 text-xs mt-2">
-              Vault 6 Studios assumes responsibility for parcels up to the point of confirmed courier handover. Liability for loss or damage thereafter is subject to the outcome of courier claim procedures.
-            </p>
-          </Section>
-
-          <Section title="10. Failed Delivery & Return to Sender">
-            <p>
-              Delivery may fail due to: incorrect or incomplete address provided, recipient unavailable after multiple delivery attempts, refusal of delivery, or parcel held at a pick-up point left uncollected.
-            </p>
-            <p>
-              If a parcel is returned to us by the courier:
-            </p>
-            <ul className="list-disc list-inside space-y-2">
-              <li>We will notify you via WhatsApp upon receipt of the returned parcel.</li>
-              <li><strong className="text-foreground">Re-delivery:</strong> You may request re-delivery at your own expense (re-shipping fee applies).</li>
-              <li><strong className="text-foreground">Refund:</strong> If you choose not to have the item re-shipped, we will issue a refund of the item value. Original shipping fees are non-refundable where the return was caused by an incorrect address or failed delivery due to your absence.</li>
+              <li><strong className="text-foreground">L1: Moisture Seal</strong> — Industrial grade poly-wrap for humidity protection.</li>
+              <li><strong className="text-foreground">L2: Shock Absorption</strong> — Double-layered 10mm bubble wrap cocoon.</li>
+              <li><strong className="text-foreground">L3: Corner Reinforcement</strong> — Custom cardboard or foam corner protectors for premium scale figures.</li>
+              <li><strong className="text-foreground">L4: Double-Walled Carton</strong> — Heavy-duty corrugated outer shipping box.</li>
+              <li><strong className="text-foreground">L5: Tamper-Evident Seal</strong> — V6 holographic security tape.</li>
             </ul>
           </Section>
 
-          <Section title="11. Large & Oversized Items">
+          <Section title="6. Transit Telemetry (Tracking)">
             <p>
-              Items at 1:4 scale or larger, premium scale figures (over 40cm), or items with exceptionally large original packaging (e.g. figures with large base components or multiple accessories) may incur additional handling or packaging fees, which will be communicated to you prior to dispatch.
+              Once an order is dispatched, a **Logistics ID (Tracking Number)** is issued via WhatsApp and Email.
             </p>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong className="text-foreground">Domestic (MY):</strong> J&T Express, NinjaVan, or PosLaju.</li>
+              <li><strong className="text-foreground">International (ASEAN):</strong> Aramex, Janio, or DHL Express.</li>
+            </ul>
+            <p className="text-foreground/60 text-xs mt-2">
+              Tracking data may take 12–24 hours to sync with regional hub telemetry.
+            </p>
+          </Section>
+
+          <Section title="7. Delivery Failure & Re-Deployment">
             <p>
-              For oversize orders, delivery timeframes may be extended by 1–2 additional business days to allow for appropriate packaging preparation.
+              Artifacts returned due to incorrect coordinates (address) or failed customs clearance can be re-deployed.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-foreground/60">
+              <li><strong className="text-foreground">Re-shipping:</strong> Buyer covers the cost of the second transit attempt.</li>
+              <li><strong className="text-foreground">Abandoned Shipments:</strong> Artifacts refused at customs or left uncollected for 14 days will be considered abandoned. No refunds are issued for abandoned international cargo.</li>
+            </ul>
+          </Section>
+
+          <Section title="8. Box Condition Policy">
+            <p>
+              We guarantee **MISB (Mint in Sealed Box)** status at the point of dispatch. However, international logistics involves multi-hub handling that may result in minor superficial box wear (e.g., dented corners, surface scratches).
+            </p>
+            <p className="italic text-v6-accent/80 text-[11px]">
+              Note: Collectors requiring "A+ Flawless" boxes for international transit should contact the Vault 6 Logistics Team for "Over-Engineered Packaging" quotes prior to order.
             </p>
           </Section>
         </>

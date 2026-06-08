@@ -3,142 +3,206 @@
 import React, { useState } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { motion } from "framer-motion";
-import { Lock, Bell, Box, Layers, Zap, Cpu } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Box, Layers, Cpu, ShieldAlert, Wifi, ArrowRight, CheckCircle2, Terminal } from "lucide-react";
+import { playHoverSound, playClickSound, playSuccessSound } from "@/lib/sound-effects";
 
 export default function KitsPage() {
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const upcomingKits = [
-    { name: "2B", category: "Nier Automata", date: "Q4 2026" },
-    { name: "Tifa", category: "FF VII", date: "Q1 2027" },
-    { name: "Lara Croft", category: "Tomb Raider", date: "COMING SOON" },
-  ];
+  const handleNotify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setIsSubmitting(true);
+    playClickSound();
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubscribed(true);
+      playSuccessSound();
+    }, 1500);
+  };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
+    <main className="min-h-screen bg-background text-foreground selection:bg-v6-accent selection:text-white transition-colors duration-500 overflow-x-hidden">
       <Header />
-      
-      <div className="flex-1 relative">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+
+      {/* Cinematic Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-10 bg-[radial-gradient(circle,var(--v6-accent),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
+      </div>
+
+      <div className="relative z-10 pt-48 pb-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+          
+          {/* Left Side: Hype & Intel */}
           <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] border border-orange-500/20 rounded-full border-dashed"
-          />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-[radial-gradient(circle,rgba(249,115,22,0.15),transparent_70%)] opacity-30" />
-        </div>
-
-        <div className="relative z-10 pt-48 pb-32 px-6 md:px-12 max-w-7xl mx-auto w-full">
-          {/* Hero Section */}
-          <div className="text-center mb-24 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-4"
-            >
-              <Zap size={14} className="text-orange-500" />
-              <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">In Development</span>
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none"
-            >
-              3D PRINT <br /><span className="text-orange-500">GARAGE KITS.</span>
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="opacity-60 max-w-2xl mx-auto text-lg font-medium"
-            >
-              3D Print Model Kits // Licensed. Pre-Printed. Yours to Build.
-            </motion.p>
-          </div>
-
-          {/* Locked Kits Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32">
-            {upcomingKits.map((kit, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + (i * 0.1) }}
-                className="relative group border border-foreground/10 rounded-[2.5rem] p-12 bg-foreground/[0.02] overflow-hidden"
-              >
-                {/* Overlay Text */}
-                <div className="absolute top-6 left-6 flex items-center gap-2 opacity-30">
-                  <Cpu size={14} />
-                  <span className="text-[8px] font-black uppercase tracking-widest">Protocol: {kit.category}</span>
-                </div>
-
-                <div className="flex flex-col items-center justify-center py-20 space-y-8">
-                  <div className="relative">
-                    <Layers className="w-24 h-24 opacity-10 group-hover:opacity-20 transition-opacity text-orange-500" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Lock className="w-8 h-8 text-orange-500" />
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-2xl font-black uppercase tracking-tighter italic mb-2">{kit.name}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">EST. {kit.date}</p>
-                  </div>
-                </div>
-
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Notify Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="max-w-3xl mx-auto bg-foreground/[0.03] dark:bg-foreground/[0.01] border border-foreground/10 rounded-[4rem] p-12 md:p-20 backdrop-blur-3xl shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-10"
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
-            
-            <div className="relative z-10 text-center space-y-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500/10 rounded-2xl mb-4">
-                <Bell size={32} className="text-orange-500" />
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                 <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Coming Soon</span>
               </div>
-              
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter">GET EARLY ACCESS.</h2>
-                <p className="opacity-60 text-sm font-medium uppercase tracking-widest">BE THE FIRST TO KNOW WHEN THE VAULT OPENS</p>
-              </div>
+              <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">3D VAULT<br/>KITS<span className="text-orange-500">.</span></h1>
+              <p className="opacity-60 text-lg leading-relaxed font-medium max-w-lg">
+                The next evolution of the archive. High-fidelity 3D assets, custom head-sculpts, and modular kitbash parts — verified and ready for physical prototyping.
+              </p>
+            </div>
 
-              {subscribed ? (
-                <div className="py-6 text-orange-500 font-black tracking-widest uppercase animate-pulse">
-                  Transmission Received. We will notify you soon.
-                </div>
-              ) : (
-                <form 
-                  onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}
-                  className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto"
-                >
-                  <input 
-                    type="email" 
-                    placeholder="YOUR EMAIL ADDRESS" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="flex-1 bg-background/50 border border-foreground/10 rounded-2xl px-8 py-6 focus:outline-none focus:border-orange-500 font-black text-xs tracking-widest transition-all"
-                  />
-                  <button type="submit" className="bg-orange-500 text-white px-10 py-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-orange-500/20">
-                    Notify Me
-                  </button>
-                </form>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+               {[
+                 { label: "ASSET_TYPE", value: "HIGH_POLY_STLs", icon: <Box size={16} /> },
+                 { label: "TOPOLOGY", value: "PRINT_OPTIMIZED", icon: <Layers size={16} /> },
+                 { label: "AUTH_LINK", value: "DIRECT_DOWNLOAD", icon: <Wifi size={16} /> },
+                 { label: "SECURITY", value: "OMNI_ENCRYPTED", icon: <Lock size={16} /> },
+               ].map(item => (
+                 <div key={item.label} className="bg-foreground/[0.02] border border-foreground/5 p-6 rounded-2xl flex items-center gap-4 group hover:bg-foreground/[0.04] transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                       {item.icon}
+                    </div>
+                    <div className="space-y-0.5">
+                       <p className="text-[7px] font-black opacity-30 uppercase tracking-widest">{item.label}</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest">{item.value}</p>
+                    </div>
+                 </div>
+               ))}
+            </div>
+
+            <div className="flex items-center gap-6 p-8 border border-orange-500/10 bg-orange-500/5 rounded-[2.5rem] opacity-40">
+               <ShieldAlert size={24} className="text-orange-500 shrink-0" />
+               <p className="text-[10px] font-bold uppercase tracking-tight leading-relaxed">
+                  Members only. Launching Q3 2026.
+               </p>
             </div>
           </motion.div>
+
+          {/* Right Side: Terminal / Request Access */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+            className="relative"
+          >
+            <div className="bg-foreground text-background rounded-[3.5rem] p-10 md:p-16 space-y-10 shadow-2xl relative overflow-hidden group">
+               {/* Static Scanline Animation */}
+               <motion.div 
+                 animate={{ top: ["-10%", "110%"] }}
+                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                 className="absolute inset-x-0 h-px bg-background/20 z-10"
+               />
+
+               <div className="space-y-2 relative z-20">
+                  <div className="flex justify-between items-start">
+                     <Terminal size={24} className="text-orange-500 mb-4" />
+                     <div className="text-right font-mono text-[8px] opacity-30 uppercase tracking-widest">
+                        Node: VAULT_06_BETA<br/>
+                        Status: ENCRYPTED
+                     </div>
+                  </div>
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none text-background">Request Access<span className="text-orange-500">.</span></h2>
+                  <p className="opacity-40 text-[10px] font-black uppercase tracking-[0.4em]">Get early access when we launch</p>
+               </div>
+
+               <div className="relative z-20">
+                  <AnimatePresence mode="wait">
+                    {!isSubscribed ? (
+                      <motion.form 
+                        key="form"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onSubmit={handleNotify} 
+                        className="space-y-6"
+                      >
+                        <div className="space-y-2">
+                           <label className="text-[8px] font-black opacity-30 uppercase tracking-widest ml-4">Your Email</label>
+                           <input 
+                             required
+                             type="email" 
+                             value={email}
+                             onChange={(e) => setEmail(e.target.value)}
+                             placeholder="your@email.com"
+                             className="w-full bg-background/5 border border-background/10 rounded-2xl py-6 px-8 font-black tracking-widest focus:border-orange-500 focus:outline-none uppercase transition-all"
+                           />
+                        </div>
+                        <button 
+                          disabled={isSubmitting}
+                          onMouseEnter={playHoverSound}
+                          className="w-full bg-orange-500 text-white rounded-2xl py-6 font-black text-xs uppercase tracking-[0.6em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-orange-500/20 flex items-center justify-center gap-4"
+                        >
+                          {isSubmitting ? (
+                            <><Cpu size={18} className="animate-spin" /> SUBMITTING...</>
+                          ) : (
+                            <>NOTIFY ME <ArrowRight size={18} /></>
+                          )}
+                        </button>
+                      </motion.form>
+                    ) : (
+                      <motion.div 
+                        key="success"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-10 space-y-6"
+                      >
+                        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20">
+                           <CheckCircle2 size={32} className="text-green-500" />
+                        </div>
+                        <div className="space-y-2">
+                           <h3 className="text-xl font-black italic uppercase tracking-tighter">You&apos;re on the list!</h3>
+                           <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
+                              We&apos;ll email you when the kits are ready to launch.
+                           </p>
+                        </div>
+                        <button 
+                           onClick={() => setIsSubscribed(false)}
+                           className="text-[8px] font-black uppercase tracking-[0.4em] opacity-30 hover:opacity-100 transition-opacity"
+                        >
+                           ← Sign up another email
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+               </div>
+
+               {/* Decorative Terminal UI */}
+               <div className="relative z-20 pt-10 mt-10 border-t border-background/10 font-mono text-[7px] uppercase tracking-widest opacity-20 space-y-1">
+                  <div>&gt; initialize_secure_handshake... ok</div>
+                  <div>&gt; mapping_3d_topology... 84%</div>
+                  <div>&gt; decrypting_mesh_data... stable</div>
+               </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* 3D Blueprint Placeholder Grid */}
+        <div className="mt-32 space-y-12">
+           <div className="text-center space-y-2">
+              <span className="text-[9px] font-black v6-accent-text uppercase tracking-[0.5em] block">3D Asset Preview</span>
+              <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">Blueprint Gallery<span className="v6-accent-text">.</span></h2>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="aspect-video bg-foreground/[0.02] border border-foreground/5 rounded-[2.5rem] relative overflow-hidden group">
+                   <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                   <div className="absolute inset-0 flex items-center justify-center grayscale opacity-10 group-hover:opacity-30 group-hover:scale-110 transition-all duration-700">
+                      <Box size={64} />
+                   </div>
+                   <div className="absolute bottom-6 left-8 flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      <span className="text-[8px] font-black uppercase tracking-[0.4em] opacity-40">MESH_DATA_LOCKED</span>
+                   </div>
+                </div>
+              ))}
+           </div>
         </div>
       </div>
 

@@ -6,6 +6,11 @@
   --v6-accent: #2563eb; /* Blue */
   --v6-glow: rgba(37, 99, 235, 0.1);
   --v6-grid: rgba(15, 23, 42, 0.05);
+  /* Card/glass surface backgrounds — increased opacity for readability */
+  --v6-surface:    rgba(255, 255, 255, 0.9);
+  --v6-surface-sm: rgba(255, 255, 255, 0.7);
+  --v6-surface-xs: rgba(255, 255, 255, 0.5);
+  --v6-border:     rgba(15, 23, 42, 0.15);
   color-scheme: light;
 }
 
@@ -15,6 +20,11 @@
   --v6-accent: #3b82f6; /* Lighter Blue */
   --v6-glow: rgba(59, 130, 246, 0.15);
   --v6-grid: rgba(255, 255, 255, 0.03);
+  /* Dark mode surfaces — boosted opacity for background obstruction */
+  --v6-surface:    rgba(12, 10, 9, 0.85);
+  --v6-surface-sm: rgba(12, 10, 9, 0.75);
+  --v6-surface-xs: rgba(12, 10, 9, 0.65);
+  --v6-border:     rgba(248, 250, 252, 0.12);
   color-scheme: dark;
 }
 
@@ -36,17 +46,28 @@
 
 html {
   min-height: 100%;
+  background: var(--background);
+  color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100%;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Semantic surface utilities — variant-aware, auto-switch light/dark via CSS vars */
+@utility v6-surface    { background-color: var(--v6-surface); }
+@utility v6-surface-sm { background-color: var(--v6-surface-sm); }
+@utility v6-surface-xs { background-color: var(--v6-surface-xs); }
+
 @layer utilities {
+  /* Image blend mode: multiply on light bg, lighten on dark bg — responds to .dark class */
+  .v6-img-blend { mix-blend-mode: multiply; }
+  .dark .v6-img-blend { mix-blend-mode: lighten; }
+
   .text-outline {
     -webkit-text-stroke: 1.5px currentColor;
     color: transparent;
@@ -111,5 +132,28 @@ body::after {
 @media (max-width: 768px) {
   .text-outline {
     -webkit-text-stroke: 1px currentColor;
+  }
+}
+
+/* Light mode: boost low-opacity text to meet WCAG AA contrast (4.5:1) */
+/* #0f172a at opacity-40 on #f8fafc ≈ 3.5:1 — fails. Boost to 0.6 = ~5.5:1 — passes. */
+:root:not(.dark) .opacity-40 { opacity: 0.65; }
+:root:not(.dark) .opacity-30 { opacity: 0.55; }
+:root:not(.dark) .opacity-20 { opacity: 0.45; }
+:root:not(.dark) .opacity-10 { opacity: 0.35; }
+:root:not(.dark) .opacity-25 { opacity: 0.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    animation: none;
+  }
+  .animate-marquee {
+    animation: none;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

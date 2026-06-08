@@ -56,7 +56,7 @@ export function Footer() {
                   <li key={link.name}>
                     <Link 
                       href={link.href}
-                      className="text-xs font-black uppercase tracking-widest opacity-60 hover:opacity-100 hover:v6-accent-text transition-all flex items-center gap-2 group"
+                      className="text-xs font-black uppercase tracking-widest opacity-60 hover:opacity-100 hover:text-[var(--v6-accent)] transition-all flex items-center gap-2 group"
                     >
                       <div className="w-1 h-1 bg-v6-accent rounded-full scale-0 group-hover:scale-100 transition-transform" />
                       {link.name}

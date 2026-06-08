@@ -22,19 +22,31 @@ export function InfoPageTemplate({ title, subtitle, content }: InfoPageProps) {
           <h1 className="text-[25vw] font-black leading-[0.7] uppercase text-outline">{title.split(' ')[1] || 'PROTOCOL'}</h1>
       </div>
 
-      <div className="relative z-10 pt-48 pb-32 px-6 md:px-12 max-w-4xl mx-auto">
+      <div className="relative z-10 pt-48 pb-32 px-6 md:px-12 max-w-5xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-12"
         >
           <div className="space-y-4">
-             <span className="text-[10px] font-black v6-accent-text uppercase tracking-[0.5em] block">{subtitle}</span>
-             <h2 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">{title}<span className="v6-accent-text">.</span></h2>
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-v6-accent/10 border border-v6-accent/20">
+                <span className="text-[8px] font-black v6-accent-text uppercase tracking-widest">Protocol: V6_INF_DOSSIER</span>
+             </div>
+             <div className="space-y-2">
+                <span className="text-[10px] font-black v6-accent-text uppercase tracking-[0.5em] block">{subtitle}</span>
+                <h2 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">{title}<span className="v6-accent-text">.</span></h2>
+             </div>
           </div>
 
           <div className="prose prose-invert prose-v6 max-w-none">
-            <div className="bg-foreground/[0.02] border border-foreground/5 rounded-[2.5rem] p-10 md:p-16 backdrop-blur-sm space-y-8 text-sm md:text-base opacity-80 leading-relaxed font-medium">
+            <div className="v6-surface border border-foreground/10 rounded-[3rem] p-10 md:p-16 backdrop-blur-sm space-y-12 text-sm md:text-base opacity-80 leading-relaxed font-medium relative overflow-hidden group">
+               {/* Laser Scan Animation */}
+               <motion.div
+                  initial={{ top: "-10%" }}
+                  whileHover={{ top: "110%" }}
+                  transition={{ duration: 2, ease: "linear" }}
+                  className="absolute left-0 right-0 h-px bg-v6-accent shadow-[0_0_15px_var(--v6-accent)] z-20 pointer-events-none opacity-0 group-hover:opacity-100"
+               />
               {content}
             </div>
           </div>
